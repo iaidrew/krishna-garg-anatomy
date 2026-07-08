@@ -1,0 +1,75 @@
+{
+  "entities": {
+    "Course": {
+      "title": "Course",
+      "description": "An anatomy course containing multiple lectures",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the course"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the course"
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the course content"
+        },
+        "duration": {
+          "type": "string",
+          "description": "Total duration of the course lectures"
+        },
+        "lecturesCount": {
+          "type": "number",
+          "description": "Number of lectures within the course"
+        },
+        "category": {
+          "type": "string",
+          "description": "Subject category of anatomy"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Icon descriptor string"
+        },
+        "lectures": {
+          "type": "array",
+          "description": "List of lectures belonging to this course"
+        }
+      },
+      "required": ["id", "title", "description", "lecturesCount", "category", "lectures"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User account registration details and authorization role",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Unique user identification from Firebase Auth"
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of the scholar"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["student", "admin"],
+          "description": "Access level role assigned to user"
+        }
+      },
+      "required": ["uid", "name", "role"]
+    }
+  },
+  "firestore": {
+    "courses/{courseId}": {
+      "schema": "Course",
+      "description": "Anatomy course document mapping high-fidelity dissections"
+    },
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Scholar profiles and institutional metadata"
+    }
+  }
+}
