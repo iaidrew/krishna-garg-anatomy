@@ -46,15 +46,15 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
   const faqCategories = ["All", "Teaching Method", "How It Works", "AI Assistant", "Certificates"];
 
   return (
-    <div className="relative pt-10 pb-20 space-y-32">
+    <div className="relative pt-4 pb-16 sm:pt-6 sm:pb-20 space-y-16 sm:space-y-24 md:space-y-32">
       {/* BACKGROUND GRAPHICS */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] aurora-blur-1 opacity-70 pointer-events-none z-0" />
       <div className="absolute top-[800px] right-10 w-[600px] h-[600px] aurora-blur-2 opacity-60 pointer-events-none z-0" />
       <div className="absolute bottom-[400px] left-10 w-[500px] h-[500px] aurora-blur-3 opacity-80 pointer-events-none z-0" />
 
       {/* HERO SECTION */}
-      <section className="relative z-10 max-w-5xl mx-auto px-4 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <section className="relative z-10 max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-12 items-center">
           {/* Hero Left Content */}
           <div className="lg:col-span-7 space-y-8">
             <motion.div
@@ -74,7 +74,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.1 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-extrabold font-display tracking-tight text-slate-900 leading-[1.08]"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold font-display tracking-tight text-slate-900 leading-[1.08]"
               >
                 Human Anatomy <br />
                 <span className="text-gradient-primary">for Dental Students.</span>
@@ -95,11 +95,11 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.3 }}
-              className="flex flex-wrap items-center gap-4 pt-2"
+              className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 pt-2"
             >
               <button
                 onClick={() => onNavigate("courses")}
-                className="group relative px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-purple-800 text-white font-medium text-xs tracking-tight shadow-lg shadow-purple-500/20 hover:scale-[1.03] transition-all flex items-center gap-2 cursor-pointer"
+                className="group relative px-5 sm:px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-purple-800 text-white font-medium text-xs tracking-tight shadow-lg shadow-purple-500/20 hover:scale-[1.03] transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 View Anatomy Courses
                 <ArrowRight className="w-4.5 h-4.5 group-hover:translate-x-1 transition-transform" />
@@ -107,7 +107,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
 
               <button
                 onClick={onOpenAI}
-                className="px-6 py-3 rounded-full bg-white border border-purple-100 text-purple-950 font-medium text-xs tracking-tight hover:bg-purple-50/50 hover:border-purple-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                className="px-5 sm:px-6 py-3 rounded-full bg-white border border-purple-100 text-purple-950 font-medium text-xs tracking-tight hover:bg-purple-50/50 hover:border-purple-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
               >
                 Ask Dr. Garg's AI Assistant
               </button>
@@ -118,7 +118,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.35 }}
-              className="bg-purple-50/70 border border-purple-100 rounded-2xl p-4 space-y-2.5 shadow-sm"
+              className="bg-purple-50/70 border border-purple-100 rounded-2xl p-3 sm:p-4 space-y-2.5 shadow-sm"
             >
               <div className="flex items-center gap-2 text-purple-950">
                 <Key className="w-4 h-4 text-purple-700 shrink-0" />
@@ -130,7 +130,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
                 Did your instructor share a passcode-locked lecture with you? Enter the lecture's password below to instantly unlock and launch the media player.
               </p>
               
-              <form onSubmit={handlePasscodeSubmit} className="flex gap-2">
+              <form onSubmit={handlePasscodeSubmit} className="flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   placeholder="e.g. SKULL2026..."
@@ -168,7 +168,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 0.4 }}
-              className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-6 border-t border-purple-100"
+              className="grid grid-cols-2 gap-3 sm:gap-6 pt-6 border-t border-purple-100 sm:grid-cols-4"
             >
               {stats.map((st, i) => (
                 <div key={i} className="space-y-1">
@@ -180,15 +180,30 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
           </div>
 
           {/* Hero Right Visuals: Interactive 3D glass models */}
-          <div className="lg:col-span-5 relative flex items-center justify-center">
+          <div className="lg:col-span-5 relative flex items-center justify-center mt-6 lg:mt-0">
+            <div className="w-full max-w-sm rounded-3xl border border-white/70 bg-white/70 p-4 shadow-xl backdrop-blur-xl sm:hidden">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-purple-800 flex items-center justify-center text-white">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-[11px] font-bold text-slate-900">Study Flow</h4>
+                  <p className="text-[8px] font-mono text-purple-600 uppercase">Mobile-Friendly Learning</p>
+                </div>
+              </div>
+              <div className="space-y-2.5 text-[10px] text-slate-600">
+                <div className="rounded-2xl bg-purple-50 p-3">Interactive anatomy models and guided lecture pathways.</div>
+                <div className="rounded-2xl bg-rose-50 p-3">Quick access to diagrams, notes, and AI tutoring.</div>
+              </div>
+            </div>
+
             {/* Medical geometry backing */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="absolute inset-0 hidden lg:flex items-center justify-center pointer-events-none">
               <MedicalGeometry className="w-80 h-80 opacity-50" />
             </div>
 
             {/* Foreground layered cards */}
-            <div className="relative w-full max-w-sm h-[400px]">
-              {/* Card 1: Neural Anatomy Widget */}
+            <div className="relative hidden sm:block w-full max-w-sm h-[320px] sm:h-[360px] lg:h-[400px]">
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, x: 20 }}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
@@ -208,7 +223,6 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
                 <p className="text-[9px] text-slate-500 text-center font-mono mt-1">Hover synpatic nodes to map cortical areas</p>
               </motion.div>
 
-              {/* Card 2: Cardiovascular Widget */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, x: -30, y: 120 }}
                 animate={{ opacity: 1, scale: 1, x: 0, y: 130 }}
@@ -228,7 +242,6 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
                 <p className="text-[9px] text-slate-500 text-center font-mono mt-2">Simulating Heartbeat Rhythm</p>
               </motion.div>
 
-              {/* Card 3: DNA Genetics Helix */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.8, y: -40 }}
                 animate={{ opacity: 1, scale: 1, y: -10 }}
@@ -249,7 +262,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
       </section>
 
       {/* INSTITUTION HIGHLIGHTS & PLATFORM FEATURES */}
-      <section className="relative z-10 max-w-5xl mx-auto px-4 space-y-16">
+      <section className="relative z-10 max-w-5xl mx-auto px-3 sm:px-4 space-y-10 sm:space-y-16">
         <div className="text-center max-w-2xl mx-auto space-y-4">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-purple-600 uppercase">
             WHY KRISHNA GARG ANATOMY
@@ -284,7 +297,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
           </div>
 
           {/* Feature 2 */}
-          <div className="glass-panel-darker rounded-3xl p-8 space-y-6 hover:shadow-2xl hover:translate-y-[-4px] transition-all group">
+          <div className="glass-panel-darker rounded-3xl p-6 sm:p-8 space-y-6 hover:shadow-2xl hover:translate-y-[-4px] transition-all group">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-400 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-rose-200">
               <Heart className="w-6 h-6 animate-pulse" />
             </div>
@@ -326,8 +339,8 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
       </section>
 
       {/* LEGENDARY TEACHER / FACULTY SECTION */}
-      <section className="relative z-10 max-w-5xl mx-auto px-4">
-        <div className="glass-panel rounded-3xl p-8 md:p-12 bg-gradient-to-br from-white/80 via-[#FFF8F3]/60 to-purple-50/20 border border-white/60 shadow-xl overflow-hidden relative">
+      <section className="relative z-10 max-w-5xl mx-auto px-3 sm:px-4">
+        <div className="glass-panel rounded-3xl p-6 sm:p-8 md:p-12 bg-gradient-to-br from-white/80 via-[#FFF8F3]/60 to-purple-50/20 border border-white/60 shadow-xl overflow-hidden relative">
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-purple-500/10 to-orange-500/5 blur-3xl pointer-events-none" />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -335,7 +348,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
             <div className="lg:col-span-5 relative flex justify-center">
               <div className="relative">
                 <div className="absolute -inset-2 bg-gradient-to-tr from-purple-600 to-orange-500 rounded-2xl blur opacity-30 animate-pulse" />
-                <div className="relative rounded-2xl w-64 h-64 bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex items-center justify-center p-6 text-center">
+                <div className="relative rounded-2xl w-52 h-52 sm:w-60 sm:h-60 md:w-64 md:h-64 bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex items-center justify-center p-4 sm:p-6 text-center">
                   {!teacherImageError ? (
                     <img
                       src={mainTeacher.avatar}
@@ -415,7 +428,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
         </div>
 
         {/* Timeline Line */}
-        <div className="relative border-l border-purple-200 ml-4 md:ml-32 py-4 space-y-12">
+        <div className="relative border-l border-purple-200 ml-2 sm:ml-4 md:ml-32 py-4 space-y-8 sm:space-y-12">
           {timelineEvents.map((ev, i) => (
             <div key={i} className="relative pl-8 group">
               {/* Timeline dot */}
@@ -443,7 +456,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
       </section>
 
       {/* STUDENT TESTIMONIALS */}
-      <section className="relative z-10 max-w-5xl mx-auto px-4 space-y-12">
+      <section className="relative z-10 max-w-5xl mx-auto px-3 sm:px-4 space-y-8 sm:space-y-12">
         <div className="text-center max-w-lg mx-auto space-y-3">
           <span className="text-[10px] font-mono font-bold tracking-widest text-purple-600 uppercase">
             STUDENT TESTIMONIALS
@@ -457,7 +470,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
           {testimonials.map((t, i) => (
             <div
               key={i}
-              className="glass-panel rounded-3xl p-6 relative flex flex-col justify-between hover:shadow-lg transition-all"
+              className="glass-panel rounded-3xl p-5 sm:p-6 relative flex flex-col justify-between hover:shadow-lg transition-all"
             >
               <Quote className="absolute top-6 right-6 w-8 h-8 text-purple-100/60 pointer-events-none" />
               <div className="space-y-4">
@@ -561,8 +574,8 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
       </section>
 
       {/* MODERN COMPACT FOOTER */}
-      <footer className="relative z-10 border-t border-purple-100 pt-12 mt-32">
-        <div className="max-w-5xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+      <footer className="relative z-10 border-t border-purple-100 pt-10 sm:pt-12 mt-20 sm:mt-32">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-purple-600 to-orange-500 flex items-center justify-center text-white font-bold text-xs">
               K
@@ -580,7 +593,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
           </div>
         </div>
 
-        <div className="max-w-5xl mx-auto px-4 mt-8 pt-6 border-t border-purple-50 text-center text-[9px] font-mono text-slate-400 tracking-wider">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 mt-8 pt-6 border-t border-purple-50 text-center text-[9px] font-mono text-slate-400 tracking-wider">
           © 2026 DR. KRISHNA GARG ANATOMY. ALL RIGHTS RESERVED.
         </div>
       </footer>

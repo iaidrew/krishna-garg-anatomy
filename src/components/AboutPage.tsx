@@ -6,7 +6,7 @@ import { mainTeacher, timelineEvents, testimonials } from "../data";
 export default function AboutPage() {
   const [teacherImageError, setTeacherImageError] = useState(false);
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-16 relative z-10">
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-10 sm:space-y-16 relative z-10">
       {/* Editorial Header */}
       <div className="text-center max-w-2xl mx-auto space-y-4">
         <span className="text-[10px] font-mono font-bold tracking-widest text-purple-700 bg-purple-50 px-3 py-1 rounded-full uppercase">
@@ -21,15 +21,15 @@ export default function AboutPage() {
       </div>
 
       {/* Profile Section */}
-      <section className="glass-panel rounded-3xl p-8 md:p-12 border border-white/60 shadow-xl overflow-hidden relative bg-white/80">
+      <section className="glass-panel rounded-3xl p-6 sm:p-8 md:p-12 border border-white/60 shadow-xl overflow-hidden relative bg-white/80">
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-purple-500/10 to-orange-500/5 blur-3xl pointer-events-none" />
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 sm:gap-10 items-center">
           {/* Avatar frame */}
           <div className="md:col-span-5 flex justify-center">
             <div className="relative">
               <div className="absolute -inset-1.5 bg-gradient-to-tr from-purple-600 to-orange-500 rounded-2xl blur opacity-30" />
-              <div className="relative rounded-2xl w-60 h-60 bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex items-center justify-center p-6 text-center">
+              <div className="relative rounded-2xl w-48 h-48 sm:w-56 sm:h-56 md:w-60 md:h-60 bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex items-center justify-center p-4 sm:p-6 text-center">
                 {!teacherImageError ? (
                   <img
                     src={mainTeacher.avatar}
@@ -59,7 +59,7 @@ export default function AboutPage() {
               <GraduationCap className="w-3.5 h-3.5" />
               Distinguished Educator & Scholar
             </span>
-            <h3 className="text-2xl font-extrabold font-display text-slate-900 leading-tight">
+            <h3 className="text-2xl sm:text-3xl font-extrabold font-display text-slate-900 leading-tight">
               {mainTeacher.name}
             </h3>
 
@@ -158,14 +158,14 @@ export default function AboutPage() {
           </p>
         </div>
 
-        <div className="relative border-l border-purple-200 ml-4 md:ml-32 py-4 space-y-10">
+        <div className="relative border-l border-purple-200 ml-2 sm:ml-4 md:ml-32 py-4 space-y-8 sm:space-y-10">
           {timelineEvents.map((ev, i) => (
             <div key={i} className="relative pl-8 group">
               <div className="absolute -left-1.5 top-1.5 w-3.5 h-3.5 rounded-full bg-white border-2 border-purple-600 group-hover:bg-purple-600 group-hover:scale-110 transition-all shadow" />
               <div className="md:absolute md:right-full md:mr-10 md:top-1.5 text-xs font-mono font-bold text-purple-700 tracking-wider">
                 {ev.year}
               </div>
-              <div className="glass-panel rounded-2xl p-5 hover:border-purple-300 transition-colors shadow-sm bg-white/60">
+              <div className="glass-panel rounded-2xl p-4 sm:p-5 hover:border-purple-300 transition-colors shadow-sm bg-white/60">
                 <span className="text-[8px] font-mono font-bold uppercase tracking-wider text-teal-600 bg-teal-50 px-2 py-0.5 rounded">
                   {ev.category}
                 </span>
@@ -192,11 +192,11 @@ export default function AboutPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
           {testimonials.map((t, i) => (
             <div
               key={i}
-              className="glass-panel rounded-3xl p-6 relative flex flex-col justify-between hover:shadow-lg transition-all bg-white/70"
+              className="glass-panel rounded-3xl p-5 sm:p-6 relative flex flex-col justify-between hover:shadow-lg transition-all bg-white/70"
             >
               <Quote className="absolute top-6 right-6 w-8 h-8 text-purple-100/50 pointer-events-none" />
               <div className="space-y-3">
