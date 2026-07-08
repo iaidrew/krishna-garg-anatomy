@@ -181,19 +181,44 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
 
           {/* Hero Right Visuals: Interactive 3D glass models */}
           <div className="lg:col-span-5 relative flex items-center justify-center mt-6 lg:mt-0">
-            <div className="w-full max-w-sm rounded-3xl border border-white/70 bg-white/70 p-4 shadow-xl backdrop-blur-xl sm:hidden">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-purple-800 flex items-center justify-center text-white">
-                  <Sparkles className="w-4 h-4" />
+            <div className="w-full max-w-sm space-y-3 sm:hidden">
+              <div className="rounded-3xl border border-purple-100 bg-white/80 p-4 shadow-lg backdrop-blur-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                    <Brain className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-[11px] font-bold text-slate-900">Neural Network</h4>
+                    <p className="text-[8px] font-mono text-purple-600 uppercase">Interactive Synapses</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-[11px] font-bold text-slate-900">Study Flow</h4>
-                  <p className="text-[8px] font-mono text-purple-600 uppercase">Mobile-Friendly Learning</p>
-                </div>
+                <p className="text-[10px] text-slate-600 leading-relaxed">Explore cortical pathways with guided anatomy visuals.</p>
               </div>
-              <div className="space-y-2.5 text-[10px] text-slate-600">
-                <div className="rounded-2xl bg-purple-50 p-3">Interactive anatomy models and guided lecture pathways.</div>
-                <div className="rounded-2xl bg-rose-50 p-3">Quick access to diagrams, notes, and AI tutoring.</div>
+
+              <div className="rounded-3xl border border-rose-100 bg-rose-50/80 p-4 shadow-lg backdrop-blur-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-500">
+                    <Heart className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-[11px] font-bold text-slate-900">Heart Anatomy</h4>
+                    <p className="text-[8px] font-mono text-rose-500 uppercase">Heart Studies</p>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-600 leading-relaxed">Follow cardiac anatomy with quick study prompts and notes.</p>
+              </div>
+
+              <div className="rounded-3xl border border-teal-100 bg-teal-50/80 p-4 shadow-lg backdrop-blur-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
+                    <Dna className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-[11px] font-bold text-slate-900">Study Guides</h4>
+                    <p className="text-[8px] font-mono text-teal-600 uppercase">Quick Revision</p>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-600 leading-relaxed">Keep anatomy revision compact and easy to revisit on the go.</p>
               </div>
             </div>
 
