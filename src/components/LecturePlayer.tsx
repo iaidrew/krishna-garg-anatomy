@@ -155,7 +155,7 @@ export default function LecturePlayer({
     const cachedFile = globalRegistry[name];
 
     if (cachedFile && (cachedFile instanceof File || cachedFile instanceof Blob)) {
-      return cachedFile instanceof Blob ? cachedFile : new Blob([cachedFile], { type: cachedFile.type || "application/octet-stream" });
+      return cachedFile;
     }
 
     const ext = name.split(".").pop()?.toLowerCase() || "";

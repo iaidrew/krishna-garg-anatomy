@@ -33,13 +33,18 @@ export default function App() {
   // Dynamic courses database with Firestore real-time sync
   const [courses, setCourses] = useState<Course[]>([]);
 
-  // Subscribe to real-time courses update
+  // Subscribe to real-time courses only after authentication state is known.
   useEffect(() => {
+    if (authLoading || !user) {
+      setCourses([]);
+      return;
+    }
+
     const unsubscribe = subscribeCourses((updatedCourses) => {
       setCourses(updatedCourses);
     });
     return () => unsubscribe();
-  }, []);
+  }, [authLoading, user]);
 
   // Listen to Firebase Auth changes
   useEffect(() => {

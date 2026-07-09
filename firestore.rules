@@ -1,8 +1,104 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function primaryOwner() {
+      return signedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email == "adityaofficial9918@gmail.com";
+    }
+
+    function userRole() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : null;
+    }
+
+    function admin() {
+      return primaryOwner() || userRole() == "admin";
+    }
+
+    function ownsUserDoc(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function validContactCreate() {
+      return request.resource.data.keys().hasOnly([
+          "id", "name", "email", "mobile", "subject", "message", "timestamp", "read"
+        ])
+        && request.resource.data.id == request.resource.id
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 120
+        && request.resource.data.email is string
+        && request.resource.data.email.size() >= 3
+        && request.resource.data.email.size() <= 254
+        && request.resource.data.mobile is string
+        && request.resource.data.mobile.size() >= 5
+        && request.resource.data.mobile.size() <= 40
+        && request.resource.data.subject is string
+        && request.resource.data.subject.size() >= 1
+        && request.resource.data.subject.size() <= 160
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 1
+        && request.resource.data.message.size() <= 5000
+        && request.resource.data.timestamp is string
+        && request.resource.data.read == false;
+    }
+
+    function validUserCreate(userId) {
+      return ownsUserDoc(userId)
+        && request.resource.data.keys().hasOnly(["uid", "name", "email", "role", "createdAt"])
+        && request.resource.data.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 120
+        && request.resource.data.createdAt is string
+        && (
+          request.resource.data.role == "student"
+          || (request.resource.data.role == "admin" && primaryOwner())
+        );
+    }
+
+    function validSelfUserUpdate(userId) {
+      return ownsUserDoc(userId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["name"])
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 120;
+    }
+
+    match /courses/{courseId} {
+      allow read: if signedIn();
+      allow create, update, delete: if admin();
+    }
+
+    match /contacts/{contactId} {
+      allow create: if validContactCreate();
+      allow read, update, delete: if admin();
+    }
+
+    match /users/{userId} {
+      allow read: if ownsUserDoc(userId) || admin();
+      allow create: if validUserCreate(userId) || admin();
+      allow update: if validSelfUserUpdate(userId) || admin();
+      allow delete: if admin() && userId != request.auth.uid;
+    }
+
+    match /config/{configId} {
+      allow read, write: if admin();
+    }
+
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

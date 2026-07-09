@@ -9,8 +9,7 @@ import {
   EyeOff, 
   ArrowRight, 
   AlertCircle, 
-  CheckCircle2,
-  Key
+  CheckCircle2
 } from "lucide-react";
 import { 
   signInWithEmailAndPassword, 
@@ -20,7 +19,6 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
-import { getAdminEmails, getAdminPasscode } from "../dbService";
 
 interface AuthPageProps {
   onAuthSuccess: (user: { uid: string; email: string | null; name: string; role: "student" | "admin" }) => void;
@@ -33,10 +31,6 @@ export default function AuthPage({ onAuthSuccess, minimal = false }: AuthPagePro
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  
-  // Admin Passcode State
-  const [isTeacherPasscode, setIsTeacherPasscode] = useState(false);
-  const [enteredPasscode, setEnteredPasscode] = useState("");
   
   // Feedback & Loading States
   const [loading, setLoading] = useState(false);
@@ -62,23 +56,9 @@ export default function AuthPage({ onAuthSuccess, minimal = false }: AuthPagePro
     }
 
     try {
-      // Retrieve authorized admin email list dynamically from Firestore
-      const adminEmails = await getAdminEmails();
       const currentEmailClean = email.trim().toLowerCase();
-      let isUserAdmin = adminEmails.includes(currentEmailClean);
-
-      // Secure dynamic Passcode validation
-      if (isSignUp && isTeacherPasscode) {
-        const correctPasscode = await getAdminPasscode();
-        if (enteredPasscode.trim() === correctPasscode) {
-          isUserAdmin = true;
-        } else {
-          setError("Incorrect passcode. Please check with your coordinator or register as a Student.");
-          setLoading(false);
-          return;
-        }
-      }
-
+      const isPrimaryOwner = currentEmailClean === "adityaofficial9918@gmail.com";
+      let isUserAdmin = isPrimaryOwner;
       const userRole = isUserAdmin ? "admin" : "student";
 
       if (isSignUp) {
@@ -94,7 +74,7 @@ export default function AuthPage({ onAuthSuccess, minimal = false }: AuthPagePro
         const profileData = {
           uid: firebaseUser.uid,
           name: name.trim(),
-          email: email.trim(),
+          email: firebaseUser.email,
           role: userRole,
           createdAt: new Date().toISOString()
         };
@@ -115,7 +95,7 @@ export default function AuthPage({ onAuthSuccess, minimal = false }: AuthPagePro
         const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
         const firebaseUser = userCredential.user;
 
-        // Fetch / update profile in Firestore, checking dynamic role in real-time
+        // Fetch the Firestore profile role. Rules protect role changes from self-promotion.
         const userDocRef = doc(db, "users", firebaseUser.uid);
         const docSnap = await getDoc(userDocRef);
 
@@ -123,10 +103,10 @@ export default function AuthPage({ onAuthSuccess, minimal = false }: AuthPagePro
         if (docSnap.exists()) {
           const data = docSnap.data();
           userName = data.name || userName;
-          
-          // If the role changed in the dynamic list of authorized admin emails, update Firestore to match
-          if (data.role !== userRole) {
-            await setDoc(userDocRef, { ...data, role: userRole }, { merge: true });
+
+          isUserAdmin = data.role === "admin" || isPrimaryOwner;
+          if (isPrimaryOwner && data.role !== "admin") {
+            await setDoc(userDocRef, { ...data, role: "admin" }, { merge: true });
           }
         } else {
           // If profile document is missing, recreate it with the correct role
@@ -134,9 +114,10 @@ export default function AuthPage({ onAuthSuccess, minimal = false }: AuthPagePro
             uid: firebaseUser.uid,
             name: userName,
             email: firebaseUser.email,
-            role: userRole,
+            role: isPrimaryOwner ? "admin" : "student",
             createdAt: new Date().toISOString()
           });
+          isUserAdmin = isPrimaryOwner;
         }
 
         setSuccess(`Welcome back, ${userName}! Signing you in...`);
@@ -145,7 +126,7 @@ export default function AuthPage({ onAuthSuccess, minimal = false }: AuthPagePro
             uid: firebaseUser.uid,
             email: firebaseUser.email,
             name: userName,
-            role: userRole
+            role: isUserAdmin ? "admin" : "student"
           });
         }, 1200);
       }
@@ -367,22 +348,22 @@ export default function AuthPage({ onAuthSuccess, minimal = false }: AuthPagePro
 
           {isSignUp && (
             <div className={`space-y-3 pt-3 ${borderClass}`}>
-              <label className="flex items-center gap-2 cursor-pointer select-none">
+              <label className="flex items-center gap-2 select-none">
                 <input
                   type="checkbox"
-                  checked={isTeacherPasscode}
+                  checked={false}
                   onChange={(e) => {
-                    setIsTeacherPasscode(e.target.checked);
-                    if (!e.target.checked) setEnteredPasscode("");
+                    e.preventDefault();
                   }}
-                  className="w-3.5 h-3.5 rounded border-slate-700 text-purple-700 focus:ring-purple-500 cursor-pointer"
+                  className="w-3.5 h-3.5 rounded border-slate-700 text-purple-700 focus:ring-purple-500"
+                  disabled
                 />
                 <span className={minimal ? "text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wide" : "text-[10px] font-mono font-bold text-slate-600 uppercase tracking-wide"}>
-                  Register as a Coordinator/Teacher
+                  Teacher access is assigned by an existing administrator after signup.
                 </span>
               </label>
 
-              {isTeacherPasscode && (
+              {false && (
                 <div className="space-y-1.5 animate-fadeIn">
                   <div className="flex justify-between items-center">
                     <label className="text-[9px] font-mono font-bold text-purple-400 uppercase tracking-wider block">
@@ -390,13 +371,13 @@ export default function AuthPage({ onAuthSuccess, minimal = false }: AuthPagePro
                     </label>
                   </div>
                   <div className="relative">
-                    <Key className="absolute left-3 top-3 w-4 h-4 text-purple-500" />
+                    <Lock className="absolute left-3 top-3 w-4 h-4 text-purple-500" />
                     <input
                       type="text"
-                      required={isTeacherPasscode}
+                      required={false}
                       placeholder="Enter the teacher invite key..."
-                      value={enteredPasscode}
-                      onChange={(e) => setEnteredPasscode(e.target.value)}
+                      value=""
+                      onChange={() => {}}
                       className={minimal ? "w-full bg-slate-800 border border-slate-750 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white outline-none focus:border-purple-500 font-mono transition-all" : "w-full bg-purple-50/30 border border-purple-100 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-800 outline-none focus:border-purple-300 font-mono transition-all"}
                     />
                   </div>

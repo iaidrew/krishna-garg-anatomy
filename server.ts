@@ -33,9 +33,40 @@ async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
   const HOST = process.env.HOST || "0.0.0.0";
+  const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+  const ALLOWED_UPLOAD_EXTENSIONS = new Set(["pdf", "png", "jpg", "jpeg", "gif", "webp", "svg", "txt", "xlsx", "docx"]);
 
-  app.use(express.json({ limit: "100mb" }));
-  app.use(express.urlencoded({ limit: "100mb", extended: true }));
+  function sanitizeUploadFilename(filename: string): string | null {
+    const baseName = path.basename(filename).replace(/[^\w.\- ()]/g, "_");
+    if (!baseName || baseName === "." || baseName === "..") {
+      return null;
+    }
+
+    const ext = baseName.split(".").pop()?.toLowerCase() || "";
+    if (!ALLOWED_UPLOAD_EXTENSIONS.has(ext)) {
+      return null;
+    }
+
+    return baseName;
+  }
+
+  function resolveUploadPath(filename: string): { uploadsDir: string; filePath: string; safeName: string } | null {
+    const safeName = sanitizeUploadFilename(filename);
+    if (!safeName) {
+      return null;
+    }
+
+    const uploadsDir = path.resolve(process.cwd(), "uploads");
+    const filePath = path.resolve(uploadsDir, safeName);
+    if (!filePath.startsWith(uploadsDir + path.sep)) {
+      return null;
+    }
+
+    return { uploadsDir, filePath, safeName };
+  }
+
+  app.use(express.json({ limit: "30mb" }));
+  app.use(express.urlencoded({ limit: "30mb", extended: true }));
 
   // API: AI Assistant Chat proxying to server-side Gemini 3.5 Flash API
   app.post("/api/chat", async (req: express.Request, res: express.Response): Promise<void> => {
@@ -134,25 +165,31 @@ Guidelines for your response:
         return res.status(400).json({ error: "Missing filename or content" });
       }
 
+      const resolved = resolveUploadPath(filename);
+      if (!resolved) {
+        return res.status(400).json({ error: "Invalid filename or unsupported file type" });
+      }
+
       // Convert Base64 data URL to binary buffer
       const base64Data = content.replace(/^data:.*;base64,/, "");
       const buffer = Buffer.from(base64Data, "base64");
-
-      const UPLOADS_DIR = path.join(process.cwd(), "uploads");
-      if (!fs.existsSync(UPLOADS_DIR)) {
-        fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+      if (buffer.length > MAX_UPLOAD_BYTES) {
+        return res.status(413).json({ error: "File is too large" });
       }
 
-      const filePath = path.join(UPLOADS_DIR, filename);
-      fs.writeFileSync(filePath, buffer);
+      if (!fs.existsSync(resolved.uploadsDir)) {
+        fs.mkdirSync(resolved.uploadsDir, { recursive: true });
+      }
 
-      console.log(`Successfully stored file to ${filePath}`);
+      fs.writeFileSync(resolved.filePath, buffer);
+
+      console.log(`Successfully stored file to ${resolved.filePath}`);
 
       res.json({
         success: true,
         message: "Anatomical material synchronized successfully with KRISHNA GARG AI cloud indexes.",
         fileId: "file_" + Math.random().toString(36).substr(2, 9),
-        filename: filename,
+        filename: resolved.safeName,
         timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
@@ -164,15 +201,19 @@ Guidelines for your response:
   // Real Download endpoint serving the exact file from disk
   app.get("/api/download/:filename", (req, res) => {
     try {
-      const filename = req.params.filename;
-      const UPLOADS_DIR = path.join(process.cwd(), "uploads");
-      const filePath = path.join(UPLOADS_DIR, filename);
+      const resolved = resolveUploadPath(req.params.filename);
+      if (!resolved) {
+        return res.status(400).send("Invalid filename or unsupported file type.");
+      }
+
+      const filename = resolved.safeName;
+      const filePath = resolved.filePath;
 
       // Self-healing: if the file does not exist (e.g., container restarted and wiped uploads directory),
       // dynamically generate a beautiful academic placeholder file on-the-fly
       if (!fs.existsSync(filePath)) {
-        if (!fs.existsSync(UPLOADS_DIR)) {
-          fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+        if (!fs.existsSync(resolved.uploadsDir)) {
+          fs.mkdirSync(resolved.uploadsDir, { recursive: true });
         }
 
         const ext = filename.split(".").pop()?.toLowerCase();
