@@ -46,17 +46,17 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
   const faqCategories = ["All", "Teaching Method", "How It Works", "AI Assistant", "Certificates"];
 
   return (
-    <div className="relative pt-4 pb-16 sm:pt-6 sm:pb-20 space-y-16 sm:space-y-24 md:space-y-32">
+    <div className="relative pt-3 pb-10 sm:pt-6 sm:pb-20 space-y-10 sm:space-y-16 md:space-y-24 overflow-hidden">
       {/* BACKGROUND GRAPHICS */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] aurora-blur-1 opacity-70 pointer-events-none z-0" />
       <div className="absolute top-[800px] right-10 w-[600px] h-[600px] aurora-blur-2 opacity-60 pointer-events-none z-0" />
       <div className="absolute bottom-[400px] left-10 w-[500px] h-[500px] aurora-blur-3 opacity-80 pointer-events-none z-0" />
 
       {/* HERO SECTION */}
-      <section className="relative z-10 max-w-5xl mx-auto px-3 sm:px-4 mt-4 sm:mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-12 items-center">
+      <section className="relative z-10 max-w-6xl mx-auto px-3 sm:px-4 mt-2 sm:mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-8 sm:gap-10 lg:gap-12 items-center">
           {/* Hero Left Content */}
-          <div className="lg:col-span-7 space-y-8">
+          <div className="space-y-6 sm:space-y-7">
             <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
@@ -74,7 +74,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.1 }}
-                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold font-display tracking-tight text-slate-900 leading-[1.08]"
+                className="text-4xl sm:text-5xl md:text-6xl font-extrabold font-display tracking-tight text-slate-900 leading-[1.02]"
               >
                 Human Anatomy <br />
                 <span className="text-gradient-primary">for Dental Students.</span>
@@ -84,7 +84,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.2 }}
-                className="text-sm md:text-base text-slate-600 leading-relaxed max-w-xl font-light"
+                className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl font-light"
               >
                 The Dr. Krishna Garg Anatomy Library is designed to simplify human anatomy, head & neck, and dental studies specifically for students under the personal authorship of India's leading educator.
               </motion.p>
@@ -95,11 +95,11 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.3 }}
-              className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 pt-2"
+              className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 pt-1"
             >
               <button
                 onClick={() => onNavigate("courses")}
-                className="group relative px-5 sm:px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-purple-800 text-white font-medium text-xs tracking-tight shadow-lg shadow-purple-500/20 hover:scale-[1.03] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="group relative w-full sm:w-auto px-5 sm:px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-purple-800 text-white font-medium text-xs tracking-tight shadow-lg shadow-purple-500/20 hover:scale-[1.03] transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 View Anatomy Courses
                 <ArrowRight className="w-4.5 h-4.5 group-hover:translate-x-1 transition-transform" />
@@ -107,7 +107,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
 
               <button
                 onClick={onOpenAI}
-                className="px-5 sm:px-6 py-3 rounded-full bg-white border border-purple-100 text-purple-950 font-medium text-xs tracking-tight hover:bg-purple-50/50 hover:border-purple-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                className="w-full sm:w-auto px-5 sm:px-6 py-3 rounded-full bg-white border border-purple-100 text-purple-950 font-medium text-xs tracking-tight hover:bg-purple-50/50 hover:border-purple-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
               >
                 Ask Dr. Garg's AI Assistant
               </button>
@@ -168,7 +168,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 0.4 }}
-              className="grid grid-cols-2 gap-3 sm:gap-6 pt-6 border-t border-purple-100 sm:grid-cols-4"
+              className="grid grid-cols-2 gap-3 sm:gap-6 pt-5 border-t border-purple-100 sm:grid-cols-4"
             >
               {stats.map((st, i) => (
                 <div key={i} className="space-y-1">
@@ -179,107 +179,70 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
             </motion.div>
           </div>
 
-          {/* Hero Right Visuals: Interactive 3D glass models */}
-          <div className="lg:col-span-5 relative flex items-center justify-center mt-6 lg:mt-0">
-            <div className="w-full max-w-sm space-y-3 sm:hidden">
-              <div className="rounded-3xl border border-purple-100 bg-white/80 p-4 shadow-lg backdrop-blur-xl">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-                    <Brain className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-[11px] font-bold text-slate-900">Neural Network</h4>
-                    <p className="text-[8px] font-mono text-purple-600 uppercase">Interactive Synapses</p>
-                  </div>
-                </div>
-                <p className="text-[10px] text-slate-600 leading-relaxed">Explore cortical pathways with guided anatomy visuals.</p>
-              </div>
-
-              <div className="rounded-3xl border border-rose-100 bg-rose-50/80 p-4 shadow-lg backdrop-blur-xl">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-500">
-                    <Heart className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-[11px] font-bold text-slate-900">Heart Anatomy</h4>
-                    <p className="text-[8px] font-mono text-rose-500 uppercase">Heart Studies</p>
-                  </div>
-                </div>
-                <p className="text-[10px] text-slate-600 leading-relaxed">Follow cardiac anatomy with quick study prompts and notes.</p>
-              </div>
-
-              <div className="rounded-3xl border border-teal-100 bg-teal-50/80 p-4 shadow-lg backdrop-blur-xl">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
-                    <Dna className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-[11px] font-bold text-slate-900">Study Guides</h4>
-                    <p className="text-[8px] font-mono text-teal-600 uppercase">Quick Revision</p>
-                  </div>
-                </div>
-                <p className="text-[10px] text-slate-600 leading-relaxed">Keep anatomy revision compact and easy to revisit on the go.</p>
-              </div>
-            </div>
-
-            {/* Medical geometry backing */}
-            <div className="absolute inset-0 hidden lg:flex items-center justify-center pointer-events-none">
-              <MedicalGeometry className="w-80 h-80 opacity-50" />
-            </div>
-
-            {/* Foreground layered cards */}
-            <div className="relative hidden sm:block w-full max-w-sm h-[320px] sm:h-[360px] lg:h-[400px]">
+          {/* Hero Right Visuals: Interactive anatomy cards */}
+          <div className="relative flex items-center justify-center mt-2 sm:mt-0">
+            <div className="relative w-full max-w-[430px] mx-auto">
+              <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-purple-100/70 via-white/60 to-teal-100/60 blur-3xl" />
               <motion.div
-                initial={{ opacity: 0, scale: 0.9, x: 20 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                transition={{ type: "spring", stiffness: 100, damping: 15, delay: 0.2 }}
-                className="absolute top-0 right-4 w-60 glass-panel rounded-2xl p-4 shadow-xl z-20 hover:translate-y-[-5px] transition-transform"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
+                className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/80 p-3.5 sm:p-4 shadow-[0_20px_60px_-20px_rgba(124,58,237,0.25)] backdrop-blur-2xl"
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-                    <Brain className="w-4 h-4" />
-                  </div>
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <div>
-                    <h4 className="text-[11px] font-bold text-slate-900">Neural Network</h4>
-                    <p className="text-[8px] font-mono text-purple-600 uppercase">Interactive Synapses</p>
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-purple-600">Interactive Study Hub</p>
+                    <h4 className="text-base sm:text-lg font-semibold text-slate-900">Explore anatomy in motion</h4>
+                  </div>
+                  <div className="rounded-full bg-gradient-to-tr from-purple-600 to-orange-500 px-2.5 py-1 text-[9px] font-mono font-semibold uppercase tracking-[0.18em] text-white">
+                    Live
                   </div>
                 </div>
-                <BrainModel className="w-32 h-32 mx-auto" />
-                <p className="text-[9px] text-slate-500 text-center font-mono mt-1">Hover synpatic nodes to map cortical areas</p>
-              </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, x: -30, y: 120 }}
-                animate={{ opacity: 1, scale: 1, x: 0, y: 130 }}
-                transition={{ type: "spring", stiffness: 100, damping: 15, delay: 0.4 }}
-                className="absolute bottom-10 left-0 w-52 glass-panel-darker rounded-2xl p-4 shadow-xl z-30 hover:translate-y-[125px] transition-transform"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-7 h-7 rounded-full bg-rose-100 flex items-center justify-center text-rose-500">
-                    <Heart className="w-4 h-4" />
+                <div className="grid grid-cols-1 sm:grid-cols-[1.05fr_0.95fr] gap-3">
+                  <div className="rounded-[1.25rem] border border-purple-100 bg-gradient-to-br from-purple-50/90 to-white p-3 sm:p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center">
+                        <Brain className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h5 className="text-[11px] font-bold text-slate-900">Neural Network</h5>
+                        <p className="text-[8px] font-mono uppercase tracking-[0.2em] text-purple-600">Synaptic Maps</p>
+                      </div>
+                    </div>
+                    <BrainModel className="w-28 h-28 sm:w-32 sm:h-32 mx-auto" />
+                    <p className="text-[9px] text-slate-500 text-center font-mono mt-1">Tap the nodes to trace regions clearly.</p>
                   </div>
-                  <div>
-                    <h4 className="text-[11px] font-bold text-slate-900">Heart Anatomy</h4>
-                    <p className="text-[8px] font-mono text-rose-500 uppercase">Heart Studies</p>
-                  </div>
-                </div>
-                <HeartModel className="w-24 h-24 mx-auto" />
-                <p className="text-[9px] text-slate-500 text-center font-mono mt-2">Simulating Heartbeat Rhythm</p>
-              </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: -40 }}
-                animate={{ opacity: 1, scale: 1, y: -10 }}
-                transition={{ type: "spring", stiffness: 100, damping: 15, delay: 0.6 }}
-                className="absolute top-16 -left-12 w-40 bg-white/40 border border-white/30 rounded-2xl p-3 shadow-lg z-10 hover:translate-y-[-15px] transition-transform"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
-                    <Dna className="w-3.5 h-3.5" />
+                  <div className="space-y-3">
+                    <div className="rounded-[1.25rem] border border-rose-100 bg-gradient-to-br from-rose-50/90 to-white p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center">
+                          <Heart className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h5 className="text-[11px] font-bold text-slate-900">Cardiac Flow</h5>
+                          <p className="text-[8px] font-mono uppercase tracking-[0.2em] text-rose-500">Heartbeat Study</p>
+                        </div>
+                      </div>
+                      <HeartModel className="w-24 h-24 sm:w-28 sm:h-28 mx-auto" />
+                      <p className="text-[9px] text-slate-500 text-center font-mono mt-1">Animated rhythms keep revision memorable.</p>
+                    </div>
+
+                    <div className="rounded-[1.25rem] border border-teal-100 bg-gradient-to-br from-teal-50/90 to-white p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center">
+                          <Dna className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h5 className="text-[11px] font-bold text-slate-900">Revision Cards</h5>
+                          <p className="text-[8px] font-mono uppercase tracking-[0.2em] text-teal-600">Quick Review</p>
+                        </div>
+                      </div>
+                      <DNAModel className="w-20 h-20 sm:w-24 sm:h-24 mx-auto" />
+                    </div>
                   </div>
-                  <h4 className="text-[10px] font-bold text-slate-900">Study Guides</h4>
                 </div>
-                <DNAModel className="w-24 h-24 mx-auto" />
               </motion.div>
             </div>
           </div>

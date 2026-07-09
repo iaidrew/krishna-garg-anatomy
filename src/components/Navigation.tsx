@@ -33,9 +33,9 @@ export default function Navigation({
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="sticky top-4 z-40 w-full max-w-5xl mx-auto px-2 sm:px-4"
+      className="sticky top-3 z-40 w-full max-w-5xl mx-auto px-2 sm:px-4"
     >
-      <div className="glass-nav rounded-2xl px-3 py-3 sm:px-6 sm:py-3.5 flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between shadow-lg shadow-purple-950/5 border border-white/50 relative overflow-visible">
+      <div className="glass-nav rounded-2xl px-2.5 py-2.5 sm:px-6 sm:py-3.5 flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between shadow-lg shadow-purple-950/5 border border-white/50 relative overflow-visible">
         {/* Ambient background accent */}
         <div className="absolute top-0 right-1/4 w-32 h-6 bg-gradient-to-r from-purple-500/10 to-orange-500/5 blur-xl pointer-events-none" />
 
@@ -61,7 +61,7 @@ export default function Navigation({
 
         {/* Center Tabs Grid */}
         <nav className="w-full md:w-auto">
-          <div className="grid grid-cols-2 gap-1.5 bg-slate-200/40 p-1 rounded-2xl border border-white/20 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:rounded-full md:w-auto">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 bg-slate-200/40 p-1 rounded-2xl border border-white/20 md:w-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -69,7 +69,7 @@ export default function Navigation({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id as any)}
-                className="relative px-2.5 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap flex-shrink-0 w-full sm:w-auto"
+                className="relative flex-1 min-w-[110px] sm:min-w-0 px-2.5 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-300 flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
               >
                 {isActive && (
                   <motion.div
