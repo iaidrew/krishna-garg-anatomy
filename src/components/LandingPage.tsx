@@ -46,11 +46,11 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
   const faqCategories = ["All", "Teaching Method", "How It Works", "AI Assistant", "Certificates"];
 
   return (
-    <div className="relative pt-3 pb-10 sm:pt-6 sm:pb-20 space-y-10 sm:space-y-16 md:space-y-24 overflow-hidden">
+    <div className="relative w-full max-w-full overflow-x-clip pt-3 pb-10 sm:pt-6 sm:pb-20 space-y-10 sm:space-y-16 md:space-y-24">
       {/* BACKGROUND GRAPHICS */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] aurora-blur-1 opacity-70 pointer-events-none z-0" />
-      <div className="absolute top-[800px] right-10 w-[600px] h-[600px] aurora-blur-2 opacity-60 pointer-events-none z-0" />
-      <div className="absolute bottom-[400px] left-10 w-[500px] h-[500px] aurora-blur-3 opacity-80 pointer-events-none z-0" />
+      <div className="absolute top-0 left-[8%] w-[min(70vw,500px)] h-[min(70vw,500px)] aurora-blur-1 opacity-70 pointer-events-none z-0" />
+      <div className="absolute top-[800px] right-2 w-[min(72vw,600px)] h-[min(72vw,600px)] aurora-blur-2 opacity-60 pointer-events-none z-0" />
+      <div className="absolute bottom-[400px] left-2 w-[min(70vw,500px)] h-[min(70vw,500px)] aurora-blur-3 opacity-80 pointer-events-none z-0" />
 
       {/* HERO SECTION */}
       <section className="relative z-10 max-w-6xl mx-auto px-3 sm:px-4 mt-2 sm:mt-6">

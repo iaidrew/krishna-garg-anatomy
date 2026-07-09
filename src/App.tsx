@@ -386,7 +386,7 @@ export default function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#FFF8F3] text-slate-900 flex flex-col justify-between selection:bg-purple-100 selection:text-purple-900 pb-14 sm:pb-20">
+    <div className="relative min-h-screen w-full max-w-full overflow-x-clip bg-[#FFF8F3] text-slate-900 flex flex-col justify-between selection:bg-purple-100 selection:text-purple-900 pb-14 sm:pb-20">
       {/* BACKGROUND NOISE OVERLAY */}
       <div className="noise-overlay" />
 
@@ -424,7 +424,7 @@ export default function App() {
       </div>
 
       {/* MASTER ACTIVE PAGE STAGE */}
-      <main className="flex-1 w-full max-w-5xl mx-auto px-2 sm:px-4 relative z-10 py-2 sm:py-4">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-2 sm:px-4 relative z-10 py-2 sm:py-4 overflow-x-clip">
         {authLoading ? (
           <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
             <div className="w-10 h-10 rounded-full border-2 border-purple-200 border-t-purple-700 animate-spin" />
