@@ -1,11 +1,12 @@
 import { Course, FAQItem, Testimonial, TimelineEvent, QuizQuestion } from "./types";
 import krishnaGargAvatar from "../assets/Krishna-Garg_(1).jpg";
+import krishnaGargIllustration from "../assets/dr_krishna_garg.svg";
 
 // Faculty profiles focused on BDS & Dental Anatomy
 export const mainTeacher = {
   name: "Dr. Krishna Garg",
   role: "Former Professor & Head of Anatomy, LHMC, New Delhi | Author of 'Textbook of Anatomy for Dental Students' | Chief Editor of B.D. Chaurasia's Human Anatomy",
-  avatar: krishnaGargAvatar,
+  avatar: krishnaGargAvatar || krishnaGargIllustration,
   bio: "Dr. Krishna Garg, MS, PhD, FAMS, FIMSA, FIAMS, FASI, is one of India's most legendary anatomists and dental-medical educators. A former Professor and Head of the Department of Anatomy at Lady Hardinge Medical College (LHMC), New Delhi, she has dedicated over five decades to teaching and mentoring thousands of dental (BDS), medical, and allied health students. Renowned for making complex cranial corridors easy and clinically relevant, Dr. Garg is the celebrated Author of the 'Textbook of Anatomy for Dental Students' and the Chief Editor of the iconic B.D. Chaurasia's Human Anatomy (9th Edition). Her curriculum is the trusted global standard for BDS dental boards and clinical practice.",
   credentials: ["MBBS", "MS", "PhD", "FIMSA", "FIAMS", "FAMS", "FASI"],
   recognitions: [

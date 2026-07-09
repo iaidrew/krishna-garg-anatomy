@@ -32,7 +32,7 @@ export default function AboutPage() {
               <div className="relative rounded-2xl w-48 h-48 sm:w-56 sm:h-56 md:w-60 md:h-60 bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex items-center justify-center p-4 sm:p-6 text-center">
                 {!teacherImageError ? (
                   <img
-                    src={mainTeacher.avatar}
+                    src={mainTeacher.avatar || ""}
                     alt={mainTeacher.name}
                     className="w-full h-full object-contain bg-slate-950"
                     style={{ objectPosition: "center top" }}

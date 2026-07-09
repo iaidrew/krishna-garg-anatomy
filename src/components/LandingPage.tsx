@@ -339,7 +339,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
                 <div className="relative rounded-2xl w-52 h-52 sm:w-60 sm:h-60 md:w-64 md:h-64 bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex items-center justify-center p-4 sm:p-6 text-center">
                   {!teacherImageError ? (
                     <img
-                      src={mainTeacher.avatar}
+                      src={mainTeacher.avatar || ""}
                       alt={mainTeacher.name}
                       className="w-full h-full object-contain bg-slate-950"
                       style={{ objectPosition: "center top" }}
