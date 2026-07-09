@@ -150,76 +150,18 @@ export default function LecturePlayer({
     setNewNoteText("");
   };
 
-  // Streamlined viewer for opening files/attachments directly
-  const handleOpenAttachment = (name: string) => {
-    // Check if the actual File is cached in our global in-memory session object
+  const createAttachmentBlob = async (name: string): Promise<Blob> => {
     const globalRegistry = (window as any).gargUploadedFiles || {};
     const cachedFile = globalRegistry[name];
 
     if (cachedFile && (cachedFile instanceof File || cachedFile instanceof Blob)) {
-      const objectUrl = URL.createObjectURL(cachedFile);
-      window.open(objectUrl, "_blank");
-    } else {
-      // Direct open from the server endpoint in a new tab (which has Content-Disposition: inline)
-      const url = `/api/download/${encodeURIComponent(name)}`;
-      window.open(url, "_blank");
+      return cachedFile instanceof Blob ? cachedFile : new Blob([cachedFile], { type: cachedFile.type || "application/octet-stream" });
     }
-  };
 
+    const ext = name.split(".").pop()?.toLowerCase() || "";
 
-
-  // Trigger real physical file downloads on client devices
-  const handleDownload = (name: string) => {
-    setIsDownloading(name);
-    
-    // Attempt download from backend server directory first
-    fetch(`/api/download/${encodeURIComponent(name)}`)
-      .then((res) => {
-        if (res.ok) {
-          return res.blob();
-        }
-        throw new Error("File not found on server, fallback to client-side generation.");
-      })
-      .then((blob) => {
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-        
-        setSuccessNotification(`Successfully downloaded "${name}" to your device.`);
-        setTimeout(() => setSuccessNotification(null), 4000);
-        setIsDownloading(null);
-      })
-      .catch((err) => {
-        console.warn(err.message);
-        
-        // Check if the actual File is cached in our global in-memory session object
-        const globalRegistry = (window as any).gargUploadedFiles || {};
-        const cachedFile = globalRegistry[name];
-
-        if (cachedFile && (cachedFile instanceof File || cachedFile instanceof Blob)) {
-          // Download the exact File uploaded by the admin
-          const link = document.createElement("a");
-          link.href = URL.createObjectURL(cachedFile);
-          link.download = name;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(link.href);
-          
-          setSuccessNotification(`Successfully downloaded "${name}" to your device.`);
-          setTimeout(() => setSuccessNotification(null), 4000);
-          setIsDownloading(null);
-        } else {
-          // Fallback: Dynamically generate a standards-compliant PDF or text document so it displays correctly
-          const ext = name.split('.').pop()?.toLowerCase() || "";
-          
-          if (ext === "pdf") {
-            // A syntactically valid minimal PDF structure to prevent viewer/browser security crashes
-            const pdfTemplate = `%PDF-1.4
+    if (ext === "pdf") {
+      const pdfTemplate = `%PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
 endobj
@@ -267,24 +209,16 @@ trailer
 startxref
 591
 %%EOF`;
-            
-            // Convert to a binary array/blob to preserve PDF format bytes
-            const bytes = new Uint8Array(pdfTemplate.length);
-            for (let i = 0; i < pdfTemplate.length; i++) {
-              bytes[i] = pdfTemplate.charCodeAt(i);
-            }
-            
-            const blob = new Blob([bytes], { type: "application/pdf" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = name;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
-          } else {
-            // Non-PDF fallback (e.g. general plain text study file)
-            const fileContent = `========================================================================
+
+      const bytes = new Uint8Array(pdfTemplate.length);
+      for (let i = 0; i < pdfTemplate.length; i++) {
+        bytes[i] = pdfTemplate.charCodeAt(i);
+      }
+
+      return new Blob([bytes], { type: "application/pdf" });
+    }
+
+    const fileContent = `========================================================================
 DR. KRISHNA GARG ANATOMY LIBRARY - ACADEMIC STUDY HANDOUT
 ========================================================================
 Chief Editor: Dr. Krishna Garg, MS, PhD, FAMS, FIMSA, FIAMS, FASI
@@ -294,21 +228,40 @@ Document Name: ${name}
 Generated: ${new Date().toLocaleDateString()}
 Verification Status: Certified Digital Study Material
 `;
-            const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = name;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
-          }
-          
-          setSuccessNotification(`Successfully downloaded "${name}" to your device.`);
-          setTimeout(() => setSuccessNotification(null), 4000);
-          setIsDownloading(null);
-        }
-      });
+    return new Blob([fileContent], { type: "text/plain;charset=utf-8" });
+  };
+
+  // Streamlined viewer for opening files/attachments directly
+  const handleOpenAttachment = async (name: string) => {
+    const blob = await createAttachmentBlob(name);
+    const objectUrl = URL.createObjectURL(blob);
+    window.open(objectUrl, "_blank");
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
+  };
+
+  // Trigger real physical file downloads on client devices
+  const handleDownload = async (name: string) => {
+    setIsDownloading(name);
+
+    try {
+      const blob = await createAttachmentBlob(name);
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+
+      setSuccessNotification(`Successfully downloaded "${name}" to your device.`);
+      setTimeout(() => setSuccessNotification(null), 4000);
+      setIsDownloading(null);
+    } catch (error) {
+      console.warn("Attachment download failed:", error);
+      setSuccessNotification(`Unable to prepare "${name}" for download right now.`);
+      setTimeout(() => setSuccessNotification(null), 4000);
+      setIsDownloading(null);
+    }
   };
 
   // Duration Formatter Helper
