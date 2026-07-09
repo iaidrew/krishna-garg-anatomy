@@ -143,7 +143,7 @@ export default function App() {
         // If the lecture is public or already unlocked, bypass verification
         if (!lecture.password || unlockedLectures[lecture.id]) {
           setSelectedCourseId(cId);
-          const index = course.lectures.findIndex((l) => l.id === lId);
+          const index = course?.lectures.findIndex((l) => l.id === lId) ?? -1;
           if (index !== -1) {
             setActiveLectureIdx(index);
           }
@@ -424,7 +424,7 @@ export default function App() {
       </div>
 
       {/* MASTER ACTIVE PAGE STAGE */}
-      <main className="flex-1 w-full max-w-5xl mx-auto px-4 relative z-10 py-4">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-2 sm:px-4 relative z-10 py-3 sm:py-4">
         {authLoading ? (
           <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
             <div className="w-10 h-10 rounded-full border-2 border-purple-200 border-t-purple-700 animate-spin" />

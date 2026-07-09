@@ -340,7 +340,7 @@ export const faqData: FAQItem[] = [
 // Alumni Testimonials from Dental Professionals
 export const testimonials: Testimonial[] = [
   {
-    name: "Dr. Arushi Sharma, MDS",
+    name: "Divya Prakash Jyoti",
     role: "Oral & Maxillofacial Surgeon",
     university: "Government Dental College & Hospital",
     text: "During my BDS first year, Dr. Krishna Garg's dental textbook was my guide. This interactive digital portal makes head and neck anatomy feel incredibly intuitive. The detailed nerve block landmarks are clear and invaluable.",
@@ -348,7 +348,7 @@ export const testimonials: Testimonial[] = [
     rating: 5
   },
   {
-    name: "Dr. Kabir Malhotra, BDS",
+    name: "Aishwarya Soni",
     role: "Clinical Dental Practitioner",
     university: "Maulana Azad Institute of Dental Sciences",
     text: "The TMJ mechanics and masticatory muscle videos saved my oral surgery pre-clinicals! Every dental student in India should use this library to ace their university practical spotters and viva boards.",

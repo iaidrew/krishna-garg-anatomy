@@ -300,9 +300,9 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           {/* Feature 1 */}
-          <div className="glass-panel rounded-3xl p-8 space-y-6 hover:shadow-2xl hover:translate-y-[-4px] transition-all group">
+          <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6 hover:shadow-2xl hover:translate-y-[-4px] transition-all group">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-500 to-purple-700 flex items-center justify-center text-white shadow-lg shadow-purple-200">
               <Award className="w-6 h-6" />
             </div>
@@ -342,7 +342,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
           </div>
 
           {/* Feature 3 */}
-          <div className="glass-panel rounded-3xl p-8 space-y-6 hover:shadow-2xl hover:translate-y-[-4px] transition-all group">
+          <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6 hover:shadow-2xl hover:translate-y-[-4px] transition-all group">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-400 to-cyan-500 flex items-center justify-center text-white shadow-lg shadow-teal-200">
               <Sparkles className="w-6 h-6" />
             </div>
