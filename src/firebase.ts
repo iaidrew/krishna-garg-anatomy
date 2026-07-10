@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD8a92pVEZXLI54wMw0KPg1SV8Wi0wOCY8",
@@ -19,3 +20,6 @@ export const db = getFirestore(app, "ai-studio-krishnagarganato-e128fd92-c1df-46
 
 // Initialize Authentication
 export const auth = getAuth(app);
+
+// Initialize Cloud Storage for durable study-material attachments
+export const storage = getStorage(app);

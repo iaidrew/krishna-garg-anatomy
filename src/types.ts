@@ -9,6 +9,8 @@ export interface Resource {
   name: string;
   size: string;
   type: string;
+  url?: string;
+  storagePath?: string;
 }
 
 export interface TimestampNote {

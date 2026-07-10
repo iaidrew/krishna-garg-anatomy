@@ -245,6 +245,11 @@ Guidelines for your response:
         contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
       }
 
+      // Prevent stale/cached content being served (PDF viewer caching can cause “wrong document later”).
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+
       res.setHeader("Content-Type", contentType);
       res.sendFile(filePath);
     } catch (error: any) {

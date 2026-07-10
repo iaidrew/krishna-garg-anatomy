@@ -656,26 +656,27 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/80 px-3 py-3 backdrop-blur-md sm:px-4 sm:py-4"
           >
             <motion.div
-              initial={{ scale: 0.95, y: 20 }}
+              initial={{ scale: 0.95, y: 16 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
+              exit={{ scale: 0.95, y: 16 }}
               transition={{ type: "spring", duration: 0.5 }}
-              className="max-w-2xl w-full bg-slate-900 border border-purple-900/40 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col md:flex-row my-8"
+              className="relative my-2 flex w-full max-w-2xl flex-col overflow-hidden rounded-[1.5rem] border border-purple-900/40 bg-slate-900 shadow-2xl md:flex-row"
             >
               {/* Close Button */}
               <button
                 onClick={handleDismissPromo}
-                className="absolute top-4 right-4 z-10 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 p-1.5 rounded-full transition-colors cursor-pointer"
+                className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-slate-700/70 bg-slate-800/90 text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
                 title="Dismiss and Continue as Guest"
+                type="button"
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
               </button>
 
               {/* Left Column: Visual Promo Panel */}
-              <div className="md:w-5/12 bg-gradient-to-br from-purple-900 via-slate-950 to-slate-950 p-6 md:p-8 flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-purple-900/20">
+              <div className="relative flex flex-col justify-between overflow-hidden border-b border-purple-900/20 bg-gradient-to-br from-purple-900 via-slate-950 to-slate-950 p-5 md:w-5/12 md:border-b-0 md:border-r md:p-7">
                 {/* Background decorative lines */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
                 <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -726,7 +727,7 @@ export default function App() {
               </div>
 
               {/* Right Column: Embedded Auth Form */}
-              <div className="md:w-7/12 bg-slate-900 p-6 md:p-8 flex flex-col justify-center">
+              <div className="flex flex-col justify-center bg-slate-900 p-5 md:w-7/12 md:p-7">
                 <div className="mb-2">
                   <span className="text-[8px] font-mono font-bold tracking-widest text-slate-400 uppercase bg-slate-800 px-2 py-0.5 rounded-full">
                     STUDENT SIGN IN

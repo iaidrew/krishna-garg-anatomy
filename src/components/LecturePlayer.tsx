@@ -150,61 +150,55 @@ export default function LecturePlayer({
     setNewNoteText("");
   };
 
-  const createAttachmentBlob = async (name: string): Promise<Blob> => {
-    const globalRegistry = (window as any).gargUploadedFiles || {};
-    const cachedFile = globalRegistry[name];
-
-    if (cachedFile && (cachedFile instanceof File || cachedFile instanceof Blob)) {
-      return cachedFile;
-    }
-
-    const response = await fetch(`/api/download/${encodeURIComponent(name)}`);
+  const createAttachmentBlob = async (resource: Resource): Promise<Blob> => {
+    const sourceUrl = resource.url || `/api/download/${encodeURIComponent(resource.name)}`;
+    const response = await fetch(sourceUrl);
     if (!response.ok) {
-      throw new Error(`The uploaded file "${name}" is no longer available on the server. Please re-upload it.`);
+      throw new Error(`The uploaded file "${resource.name}" is no longer available. Please ask an administrator to re-upload it.`);
     }
 
     const contentType = response.headers.get("content-type") || "";
     if (contentType.includes("text/html")) {
-      throw new Error(`The file service returned an HTML page instead of "${name}". Please run the Express dev server, not a static preview.`);
+      throw new Error(`The file service returned an HTML page instead of "${resource.name}". Please check the attachment storage configuration.`);
     }
 
     return response.blob();
   };
 
   // Streamlined viewer for opening files/attachments directly
-  const handleOpenAttachment = async (name: string) => {
+  const handleOpenAttachment = async (resource: Resource) => {
     try {
-      const blob = await createAttachmentBlob(name);
+      const blob = await createAttachmentBlob(resource);
       const objectUrl = URL.createObjectURL(blob);
       window.open(objectUrl, "_blank");
       setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
     } catch (error) {
       console.warn("Attachment open failed:", error);
-      setSuccessNotification(error instanceof Error ? error.message : `Unable to open "${name}" right now.`);
+      setSuccessNotification(error instanceof Error ? error.message : `Unable to open "${resource.name}" right now.`);
       setTimeout(() => setSuccessNotification(null), 5000);
     }
   };
 
   // Trigger real physical file downloads on client devices
-  const handleDownload = async (name: string) => {
-    setIsDownloading(name);
+  const handleDownload = async (resource: Resource) => {
+    setIsDownloading(resource.name);
 
     try {
-      const blob = await createAttachmentBlob(name);
+      const blob = await createAttachmentBlob(resource);
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = name;
+      link.download = resource.name;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
 
-      setSuccessNotification(`Successfully downloaded "${name}" to your device.`);
+      setSuccessNotification(`Successfully downloaded "${resource.name}" to your device.`);
       setTimeout(() => setSuccessNotification(null), 4000);
       setIsDownloading(null);
     } catch (error) {
       console.warn("Attachment download failed:", error);
-      setSuccessNotification(error instanceof Error ? error.message : `Unable to prepare "${name}" for download right now.`);
+      setSuccessNotification(error instanceof Error ? error.message : `Unable to prepare "${resource.name}" for download right now.`);
       setTimeout(() => setSuccessNotification(null), 5000);
       setIsDownloading(null);
     }
@@ -529,13 +523,13 @@ export default function LecturePlayer({
 
                                   <div className="flex items-center gap-2 shrink-0">
                                     <button
-                                      onClick={() => handleOpenAttachment(res.name)}
+                                      onClick={() => handleOpenAttachment(res)}
                                       className="text-[9px] font-mono font-bold text-purple-800 hover:text-purple-950 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-xl border border-purple-100/50 transition-all cursor-pointer shadow-xs"
                                     >
                                       VIEW / OPEN
                                     </button>
                                     <button
-                                      onClick={() => handleDownload(res.name)}
+                                      onClick={() => handleDownload(res)}
                                       disabled={isDownloading !== null}
                                       className="text-[9px] font-mono font-bold text-teal-800 hover:text-teal-950 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-xl border border-teal-100/50 transition-all cursor-pointer shadow-xs disabled:opacity-40"
                                     >
@@ -927,13 +921,13 @@ export default function LecturePlayer({
 
                         <div className="flex items-center gap-2 shrink-0">
                           <button
-                            onClick={() => handleOpenAttachment(res.name)}
+                            onClick={() => handleOpenAttachment(res)}
                             className="text-[9px] font-mono font-bold text-purple-800 hover:text-purple-950 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-xl border border-purple-100/50 transition-all cursor-pointer shadow-xs"
                           >
                             VIEW / OPEN
                           </button>
                           <button
-                            onClick={() => handleDownload(res.name)}
+                            onClick={() => handleDownload(res)}
                             disabled={isDownloading !== null}
                             className="text-[9px] font-mono font-bold text-teal-800 hover:text-teal-950 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-xl border border-teal-100/50 transition-all cursor-pointer shadow-xs disabled:opacity-40"
                           >
@@ -985,13 +979,13 @@ export default function LecturePlayer({
                                <span className="text-[10px] text-slate-700 font-medium truncate max-w-[120px] sm:max-w-[155px]" title={res.name}>{res.name}</span>
                                <div className="flex items-center gap-1.5 shrink-0">
                                  <button
-                                   onClick={() => handleOpenAttachment(res.name)}
+                                   onClick={() => handleOpenAttachment(res)}
                                    className="text-[8px] font-mono font-bold text-purple-800 hover:text-purple-950 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded-lg border border-purple-100/50 transition-all cursor-pointer"
                                  >
                                    VIEW
                                  </button>
                                  <button
-                                   onClick={() => handleDownload(res.name)}
+                                   onClick={() => handleDownload(res)}
                                    disabled={isDownloading !== null}
                                    className="text-[8px] font-mono font-bold text-amber-800 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-100 transition-all cursor-pointer disabled:opacity-40"
                                  >

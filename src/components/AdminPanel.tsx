@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ShieldCheck, Video, Clock, Key, FileText, Plus, CheckCircle2, Lock, Unlock, Copy, Trash2, Globe, AlertTriangle, Sparkles, RefreshCw, Image, Upload, Mail, MessageSquare, Calendar, User, Smartphone, X } from "lucide-react";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { storage } from "../firebase";
 import { Course, Lecture, Resource } from "../types";
 import { mainTeacher } from "../data";
 import { subscribeContacts, deleteContactFromDb, updateContactReadStatus, subscribeAdmins, addAdminEmail, removeAdminEmail, subscribeUsers, updateUserRole, getAdminPasscode, updateAdminPasscode, deleteUserFromDb, deleteResourceFromLecture } from "../dbService";
@@ -212,50 +214,42 @@ export default function AdminPanel({
   };
 
   // Document attachment upload handlers
-  const handleDocAttachmentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDocAttachmentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    
-    if (!(window as any).gargUploadedFiles) {
-      (window as any).gargUploadedFiles = {};
-    }
-    
-    const newResources: Resource[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-      const ext = file.name.split('.').pop()?.toUpperCase() || "PDF";
-      newResources.push({
-        name: file.name,
-        size: `${sizeMB} MB`,
-        type: ext
-      });
-      // Store File object in global window registry
-      (window as any).gargUploadedFiles[file.name] = file;
 
-      // Real-time asynchronous upload to Express disk storage
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const base64Content = event.target?.result as string;
-        try {
-          await fetch("/api/upload", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              filename: file.name,
-              content: base64Content,
-            }),
-          });
-          console.log(`Successfully uploaded & synchronized ${file.name} to server filesystem.`);
-        } catch (uploadErr) {
-          console.error(`Failed to upload ${file.name} to Express backend:`, uploadErr);
-        }
-      };
-      reader.readAsDataURL(file);
+    const newResources: Resource[] = [];
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        const ext = file.name.split(".").pop()?.toUpperCase() || "PDF";
+        const safeName = file.name.replace(/[^\w.\- ()]/g, "_");
+        const storagePath = `course-materials/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
+        const storageRef = ref(storage, storagePath);
+
+        await uploadBytes(storageRef, file, {
+          contentType: file.type || "application/octet-stream",
+          customMetadata: {
+            originalName: file.name
+          }
+        });
+
+        const url = await getDownloadURL(storageRef);
+        newResources.push({
+          name: file.name,
+          size: `${sizeMB} MB`,
+          type: ext,
+          url,
+          storagePath
+        });
+      }
+
+      setDocResourcesList((prev) => [...prev, ...newResources]);
+    } catch (uploadErr) {
+      console.error("Failed to upload study material to Firebase Storage:", uploadErr);
+      triggerAlert("Upload Failed", "Could not upload one or more study materials to cloud storage. Please check Firebase Storage permissions and try again.");
     }
-    setDocResourcesList([...docResourcesList, ...newResources]);
   };
 
   const handleDocAddResource = () => {
