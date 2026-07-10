@@ -158,85 +158,31 @@ export default function LecturePlayer({
       return cachedFile;
     }
 
-    const ext = name.split(".").pop()?.toLowerCase() || "";
-
-    if (ext === "pdf") {
-      const pdfTemplate = `%PDF-1.4
-1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
-endobj
-2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
-endobj
-3 0 obj
-<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 595 842] /Contents 5 0 R >>
-endobj
-4 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
-endobj
-5 0 obj
-<< /Length 450 >>
-stream
-BT
-/F1 14 Tf
-50 750 Td
-(DR. KRISHNA GARG ANATOMY LIBRARY) Tj
-0 -25 Td
-(Academic Study Handout & Reference Material) Tj
-0 -25 Td
-(Document Name: ${name}) Tj
-0 -20 Td
-(----------------------------------------------------------------------) Tj
-0 -25 Td
-(This belongs to the official digital archives of Dr. Krishna Garg.) Tj
-0 -15 Td
-(Former Head of Anatomy, Lady Hardinge Medical College.) Tj
-0 -20 Td
-(Please use this material in tandem with the B.D. Chaurasia handbooks.) Tj
-ET
-endstream
-endobj
-xref
-0 6
-0000000000 65535 f 
-0000000009 00000 n 
-0000000058 00000 n 
-0000000115 00000 n 
-0000000222 00000 n 
-0000000291 00000 n 
-trailer
-<< /Size 6 /Root 1 0 R >>
-startxref
-591
-%%EOF`;
-
-      const bytes = new Uint8Array(pdfTemplate.length);
-      for (let i = 0; i < pdfTemplate.length; i++) {
-        bytes[i] = pdfTemplate.charCodeAt(i);
-      }
-
-      return new Blob([bytes], { type: "application/pdf" });
+    const response = await fetch(`/api/download/${encodeURIComponent(name)}`);
+    if (!response.ok) {
+      throw new Error(`The uploaded file "${name}" is no longer available on the server. Please re-upload it.`);
     }
 
-    const fileContent = `========================================================================
-DR. KRISHNA GARG ANATOMY LIBRARY - ACADEMIC STUDY HANDOUT
-========================================================================
-Chief Editor: Dr. Krishna Garg, MS, PhD, FAMS, FIMSA, FIAMS, FASI
-Former Professor & Head of Department of Anatomy, Lady Hardinge Medical College, New Delhi
-------------------------------------------------------------------------
-Document Name: ${name}
-Generated: ${new Date().toLocaleDateString()}
-Verification Status: Certified Digital Study Material
-`;
-    return new Blob([fileContent], { type: "text/plain;charset=utf-8" });
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("text/html")) {
+      throw new Error(`The file service returned an HTML page instead of "${name}". Please run the Express dev server, not a static preview.`);
+    }
+
+    return response.blob();
   };
 
   // Streamlined viewer for opening files/attachments directly
   const handleOpenAttachment = async (name: string) => {
-    const blob = await createAttachmentBlob(name);
-    const objectUrl = URL.createObjectURL(blob);
-    window.open(objectUrl, "_blank");
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
+    try {
+      const blob = await createAttachmentBlob(name);
+      const objectUrl = URL.createObjectURL(blob);
+      window.open(objectUrl, "_blank");
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
+    } catch (error) {
+      console.warn("Attachment open failed:", error);
+      setSuccessNotification(error instanceof Error ? error.message : `Unable to open "${name}" right now.`);
+      setTimeout(() => setSuccessNotification(null), 5000);
+    }
   };
 
   // Trigger real physical file downloads on client devices
@@ -258,8 +204,8 @@ Verification Status: Certified Digital Study Material
       setIsDownloading(null);
     } catch (error) {
       console.warn("Attachment download failed:", error);
-      setSuccessNotification(`Unable to prepare "${name}" for download right now.`);
-      setTimeout(() => setSuccessNotification(null), 4000);
+      setSuccessNotification(error instanceof Error ? error.message : `Unable to prepare "${name}" for download right now.`);
+      setTimeout(() => setSuccessNotification(null), 5000);
       setIsDownloading(null);
     }
   };
