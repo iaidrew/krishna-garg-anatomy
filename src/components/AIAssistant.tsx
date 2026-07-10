@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Sparkles, Send, X, ArrowUpRight, MessageSquare, Terminal } from "lucide-react";
 import { Message } from "../types";
+import { getApiBaseUrl } from "../firebase";
 
 // High-end medical terms vocabulary etymologies to enrich local insights
 const localGlossary: Record<string, string> = {
@@ -53,7 +54,7 @@ export default function AIAssistant({ isOpen, onClose, onHighlightTerm }: AIAssi
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch(`${getApiBaseUrl()}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

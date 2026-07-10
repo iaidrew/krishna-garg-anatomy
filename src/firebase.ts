@@ -1,7 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD8a92pVEZXLI54wMw0KPg1SV8Wi0wOCY8",
@@ -21,5 +20,27 @@ export const db = getFirestore(app, "ai-studio-krishnagarganato-e128fd92-c1df-46
 // Initialize Authentication
 export const auth = getAuth(app);
 
-// Initialize Cloud Storage for durable study-material attachments
-export const storage = getStorage(app);
+/**
+ * Detects the correct server-side API base URL.
+ * If running locally in dev or directly on the container, relative paths ("") are used.
+ * If running on Netlify (or other external hostnames), it falls back to the Cloud Run server.
+ */
+export function getApiBaseUrl(): string {
+  const hostname = window.location.hostname;
+  if (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname.includes(".run.app")
+  ) {
+    return "";
+  }
+  
+  // Expose configuration via Vite env var if provided, else fallback to the applet's Cloud Run server
+  const envUrl = (import.meta as any).env?.VITE_API_URL;
+  if (envUrl) {
+    return envUrl.replace(/\/$/, "");
+  }
+
+  return "https://ais-dev-kemlx2hqfliwwwvi77jrc2-300664365715.asia-east1.run.app";
+}
+
