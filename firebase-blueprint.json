@@ -53,13 +53,122 @@
           "type": "string",
           "description": "Full name of the scholar"
         },
+        "email": {
+          "type": "string",
+          "description": "Email address of the registered scholar"
+        },
         "role": {
           "type": "string",
           "enum": ["student", "admin"],
           "description": "Access level role assigned to user"
+        },
+        "registrationPasscode": {
+          "type": "string",
+          "description": "Optional validation passcode supplied during admin registration"
         }
       },
       "required": ["uid", "name", "role"]
+    },
+    "Contact": {
+      "title": "Contact",
+      "description": "Student message inquiries and feedback submissions containing sensitive PII",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the contact query document"
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of the inquirer"
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the inquirer"
+        },
+        "mobile": {
+          "type": "string",
+          "description": "Contact phone number of the inquirer"
+        },
+        "subject": {
+          "type": "string",
+          "description": "Subject title of the query"
+        },
+        "message": {
+          "type": "string",
+          "description": "Core message content of the inquiry"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO timestamp representing the submission time"
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Administrative status flag tracking whether a message was reviewed"
+        }
+      },
+      "required": ["id", "name", "email", "mobile", "message", "timestamp"]
+    },
+    "AdminConfig": {
+      "title": "AdminConfig",
+      "description": "System configuration document tracking privileged admin emails",
+      "type": "object",
+      "properties": {
+        "emails": {
+          "type": "array",
+          "description": "List of authorized administrator emails"
+        }
+      },
+      "required": ["emails"]
+    },
+    "SettingsConfig": {
+      "title": "SettingsConfig",
+      "description": "System configuration document tracking settings such as the admin registration passcode",
+      "type": "object",
+      "properties": {
+        "adminPasscode": {
+          "type": "string",
+          "description": "Active registration invite passcode"
+        }
+      },
+      "required": ["adminPasscode"]
+    },
+    "FileBackup": {
+      "title": "FileBackup",
+      "description": "Metadata for backed up file assets",
+      "type": "object",
+      "properties": {
+        "filename": {
+          "type": "string"
+        },
+        "totalChunks": {
+          "type": "number"
+        },
+        "secret": {
+          "type": "string"
+        },
+        "uploadedAt": {
+          "type": "string"
+        }
+      },
+      "required": ["filename", "totalChunks", "secret"]
+    },
+    "FileChunk": {
+      "title": "FileChunk",
+      "description": "Fragment of base64 document content",
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "number"
+        },
+        "data": {
+          "type": "string"
+        },
+        "secret": {
+          "type": "string"
+        }
+      },
+      "required": ["index", "data", "secret"]
     }
   },
   "firestore": {
@@ -70,6 +179,26 @@
     "users/{userId}": {
       "schema": "User",
       "description": "Scholar profiles and institutional metadata"
+    },
+    "contacts/{contactId}": {
+      "schema": "Contact",
+      "description": "Direct student helpdesk inquiries"
+    },
+    "config/admins": {
+      "schema": "AdminConfig",
+      "description": "Immutable list of administrative emails"
+    },
+    "config/settings": {
+      "schema": "SettingsConfig",
+      "description": "Global administrative configurations and passcodes"
+    },
+    "files/{filename}": {
+      "schema": "FileBackup",
+      "description": "Cloud backup of uploaded materials and anatomical files"
+    },
+    "files/{filename}/chunks/{chunkId}": {
+      "schema": "FileChunk",
+      "description": "Sub-1MB fragments of uploaded base64 data streams"
     }
   }
 }

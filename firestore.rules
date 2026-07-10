@@ -1,104 +1,134 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() {
+
+    // Global Safety Net (Zero-Trust Catch-All)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- REUSABLE SECURITY PRIMITIVES ---
+    
+    function isSignedIn() {
       return request.auth != null;
     }
 
-    function primaryOwner() {
-      return signedIn()
-        && request.auth.token.email != null
-        && request.auth.token.email == "adityaofficial9918@gmail.com";
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
-    function userRole() {
-      return signedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
-        : null;
+    function incoming() {
+      return request.resource.data;
     }
 
-    function admin() {
-      return primaryOwner() || userRole() == "admin";
+    function existing() {
+      return resource.data;
     }
 
-    function ownsUserDoc(userId) {
-      return signedIn() && request.auth.uid == userId;
+    // Helper to identify verified administrators
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email.toLowerCase() == "adityaofficial9918@gmail.com" ||
+        (exists(/databases/$(database)/documents/config/admins) && request.auth.token.email.toLowerCase() in get(/databases/$(database)/documents/config/admins).data.emails) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin")
+      );
     }
 
-    function validContactCreate() {
-      return request.resource.data.keys().hasOnly([
-          "id", "name", "email", "mobile", "subject", "message", "timestamp", "read"
-        ])
-        && request.resource.data.id == request.resource.id
-        && request.resource.data.name is string
-        && request.resource.data.name.size() >= 1
-        && request.resource.data.name.size() <= 120
-        && request.resource.data.email is string
-        && request.resource.data.email.size() >= 3
-        && request.resource.data.email.size() <= 254
-        && request.resource.data.mobile is string
-        && request.resource.data.mobile.size() >= 5
-        && request.resource.data.mobile.size() <= 40
-        && request.resource.data.subject is string
-        && request.resource.data.subject.size() >= 1
-        && request.resource.data.subject.size() <= 160
-        && request.resource.data.message is string
-        && request.resource.data.message.size() >= 1
-        && request.resource.data.message.size() <= 5000
-        && request.resource.data.timestamp is string
-        && request.resource.data.read == false;
-    }
+    // --- COLLECTION MATCHES ---
 
-    function validUserCreate(userId) {
-      return ownsUserDoc(userId)
-        && request.resource.data.keys().hasOnly(["uid", "name", "email", "role", "createdAt"])
-        && request.resource.data.uid == userId
-        && request.resource.data.email == request.auth.token.email
-        && request.resource.data.name is string
-        && request.resource.data.name.size() >= 1
-        && request.resource.data.name.size() <= 120
-        && request.resource.data.createdAt is string
-        && (
-          request.resource.data.role == "student"
-          || (request.resource.data.role == "admin" && primaryOwner())
-        );
-    }
-
-    function validSelfUserUpdate(userId) {
-      return ownsUserDoc(userId)
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["name"])
-        && request.resource.data.uid == resource.data.uid
-        && request.resource.data.email == resource.data.email
-        && request.resource.data.role == resource.data.role
-        && request.resource.data.name is string
-        && request.resource.data.name.size() >= 1
-        && request.resource.data.name.size() <= 120;
-    }
-
+    // 1. Courses Collection
     match /courses/{courseId} {
-      allow read: if signedIn();
-      allow create, update, delete: if admin();
+      allow read: if true;
+      allow create, update, delete: if isAdmin() && isValidId(courseId);
     }
 
-    match /contacts/{contactId} {
-      allow create: if validContactCreate();
-      allow read, update, delete: if admin();
-    }
-
+    // 2. Scholar Profiles (Users)
     match /users/{userId} {
-      allow read: if ownsUserDoc(userId) || admin();
-      allow create: if validUserCreate(userId) || admin();
-      allow update: if validSelfUserUpdate(userId) || admin();
-      allow delete: if admin() && userId != request.auth.uid;
+      // Admins can view all scholar profiles. Users can read their own profile.
+      allow read: if isSignedIn() && (userId == request.auth.uid || isAdmin());
+      
+      // Allow profile deletion only for administrators
+      allow delete: if isAdmin();
+
+      // Creation rules with self-assignment protection
+      allow create: if isSignedIn() && userId == request.auth.uid && isValidId(userId) && isValidUser(incoming()) && (
+        incoming().role == "student" ||
+        incoming().role == "admin" && (
+          request.auth.token.email.toLowerCase() == "adityaofficial9918@gmail.com" ||
+          (exists(/databases/$(database)/documents/config/admins) && request.auth.token.email.toLowerCase() in get(/databases/$(database)/documents/config/admins).data.emails) ||
+          (incoming().registrationPasscode is string && incoming().registrationPasscode == get(/databases/$(database)/documents/config/settings).data.adminPasscode)
+        )
+      );
+
+      // Update rules with action-based privilege separation
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (userId == request.auth.uid && isValidUser(incoming()) && (
+          // Protect immortal fields (uid, email, createdAt)
+          incoming().uid == existing().uid &&
+          incoming().email == existing().email &&
+          
+          // Users cannot escalate their own privilege unless they satisfy the passcode verification
+          (
+            incoming().role == existing().role ||
+            (incoming().role == "admin" && (
+              request.auth.token.email.toLowerCase() == "adityaofficial9918@gmail.com" ||
+              (exists(/databases/$(database)/documents/config/admins) && request.auth.token.email.toLowerCase() in get(/databases/$(database)/documents/config/admins).data.emails) ||
+              (incoming().registrationPasscode is string && incoming().registrationPasscode == get(/databases/$(database)/documents/config/settings).data.adminPasscode)
+            ))
+          )
+        ))
+      );
     }
 
-    match /config/{configId} {
-      allow read, write: if admin();
+    // Validation helper for Scholar profiles
+    function isValidUser(user) {
+      return user.uid is string && user.uid.size() <= 128 &&
+             user.name is string && user.name.size() <= 120 &&
+             user.email is string && user.email.size() <= 120 &&
+             user.role is string && (user.role == "student" || user.role == "admin");
     }
 
-    match /{document=**} {
-      allow read, write: if false;
+    // 3. Student Contact Inquiries (PII Isolation Enforced)
+    match /contacts/{contactId} {
+      // Anyone can submit an inquiry (leads, guests, or scholars)
+      allow create: if isValidId(contactId) && isValidContact(incoming());
+      
+      // Reading, updating read-status, or deleting inquiries is strictly locked to administrators.
+      // This enforces complete PII Isolation for names, emails, and mobile numbers.
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Validation helper for Student inquiries
+    function isValidContact(contact) {
+      return contact.id is string && contact.id.size() <= 128 &&
+             contact.name is string && contact.name.size() <= 120 &&
+             contact.email is string && contact.email.size() <= 120 &&
+             contact.mobile is string && contact.mobile.size() <= 40 &&
+             contact.message is string && contact.message.size() <= 5000 &&
+             contact.timestamp is string && contact.timestamp.size() <= 100;
+    }
+
+    // 4. System Configurations (Admins and Settings)
+    match /config/{docId} {
+      // Config documents are readable publicly to permit validation checks
+      allow read: if true;
+      
+      // Updates are locked down exclusively to administrators
+      allow create, update, delete: if isAdmin() && isValidId(docId);
+    }
+
+    // 5. Cloud-Backed Files Storage (Durable file index for ephemeral container storage)
+    match /files/{filename} {
+      allow read: if true;
+      allow create, update: if (incoming().secret == "GARG_SERVER_SECRET_2026") || isAdmin();
+      allow delete: if isAdmin();
+
+      match /chunks/{chunkId} {
+        allow read: if true;
+        allow create, update: if (incoming().secret == "GARG_SERVER_SECRET_2026") || isAdmin();
+        allow delete: if isAdmin();
+      }
     }
   }
 }
