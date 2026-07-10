@@ -39,18 +39,22 @@ async function saveFileToFirestore(filename: string, base64Content: string) {
       uploadedAt: new Date().toISOString()
     });
 
+    const chunkPromises = [];
     for (let i = 0; i < totalChunks; i++) {
       const start = i * CHUNK_SIZE;
       const end = Math.min(start + CHUNK_SIZE, base64Content.length);
       const chunkData = base64Content.substring(start, end);
 
       const chunkDocRef = doc(db, "files", filename, "chunks", `chunk_${i}`);
-      await setDoc(chunkDocRef, {
-        index: i,
-        data: chunkData,
-        secret: "GARG_SERVER_SECRET_2026"
-      });
+      chunkPromises.push(
+        setDoc(chunkDocRef, {
+          index: i,
+          data: chunkData,
+          secret: "GARG_SERVER_SECRET_2026"
+        })
+      );
     }
+    await Promise.all(chunkPromises);
     console.log(`Successfully backed up ${filename} to Firestore (${totalChunks} chunks).`);
   } catch (err) {
     console.error(`Failed to backup ${filename} to Firestore:`, err);
@@ -271,8 +275,10 @@ Guidelines for your response:
 
       console.log(`Successfully stored file to ${filePath}`);
 
-      // Backup durably to Firestore to survive ephemeral container restarts
-      await saveFileToFirestore(filename, content);
+      // Backup durably to Firestore to survive ephemeral container restarts in the background (asynchronous & non-blocking)
+      saveFileToFirestore(filename, content).catch((err) => {
+        console.error(`Background Firestore backup failed for ${filename}:`, err);
+      });
 
       res.json({
         success: true,
@@ -295,8 +301,11 @@ Guidelines for your response:
       const filePath = path.join(UPLOADS_DIR, filename);
 
       // If the file does not exist locally (due to container scale-down or restart),
-      // check if a durable cloud backup exists in Firestore and restore it automatically.
-      if (!fs.existsSync(filePath)) {
+      // or if it exists but is a tiny placeholder under 5KB, try to restore from the Firestore cloud backup.
+      const fileExists = fs.existsSync(filePath);
+      const isPlaceholder = fileExists && fs.statSync(filePath).size < 5000;
+
+      if (!fileExists || isPlaceholder) {
         await restoreFileFromFirestore(filename, filePath);
       }
 
