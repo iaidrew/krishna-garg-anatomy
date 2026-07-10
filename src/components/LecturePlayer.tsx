@@ -35,6 +35,7 @@ export default function LecturePlayer({
   const [newNoteText, setNewNoteText] = useState("");
   const [customNotes, setCustomNotes] = useState<TimestampNote[]>([]);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
+  const [isOpeningAttachment, setIsOpeningAttachment] = useState<string | null>(null);
   const [successNotification, setSuccessNotification] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -152,7 +153,7 @@ export default function LecturePlayer({
   };
 
   // Streamlined viewer for opening files/attachments directly
-  const handleOpenAttachment = (name: string) => {
+  const handleOpenAttachment = async (name: string) => {
     // Check if the actual File is cached in our global in-memory session object
     const globalRegistry = (window as any).gargUploadedFiles || {};
     const cachedFile = globalRegistry[name];
@@ -160,10 +161,36 @@ export default function LecturePlayer({
     if (cachedFile && (cachedFile instanceof File || cachedFile instanceof Blob)) {
       const objectUrl = URL.createObjectURL(cachedFile);
       window.open(objectUrl, "_blank");
-    } else {
-      // Direct open from the server endpoint in a new tab (which has Content-Disposition: inline)
-      const url = `${getApiBaseUrl()}/api/download/${encodeURIComponent(name)}`;
-      window.open(url, "_blank");
+      return;
+    }
+
+    setIsOpeningAttachment(name);
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/download/${encodeURIComponent(name)}`);
+      if (!response.ok) {
+        throw new Error("File not found on server");
+      }
+      const blob = await response.blob();
+      
+      // Determine correct MIME type for in-browser rendering
+      const ext = name.split(".").pop()?.toLowerCase();
+      let mimeType = "application/octet-stream";
+      if (ext === "pdf") mimeType = "application/pdf";
+      else if (ext === "png") mimeType = "image/png";
+      else if (ext === "jpg" || ext === "jpeg") mimeType = "image/jpeg";
+      else if (ext === "gif") mimeType = "image/gif";
+      else if (ext === "svg") mimeType = "image/svg+xml";
+      else if (ext === "txt") mimeType = "text/plain";
+
+      const typedBlob = new Blob([blob], { type: mimeType });
+      const objectUrl = URL.createObjectURL(typedBlob);
+      window.open(objectUrl, "_blank");
+    } catch (err) {
+      console.warn("Client-side download fallback triggered due to:", err);
+      // Fallback: direct window open if fetch has any issues
+      window.open(`${getApiBaseUrl()}/api/download/${encodeURIComponent(name)}`, "_blank");
+    } finally {
+      setIsOpeningAttachment(null);
     }
   };
 
@@ -632,9 +659,10 @@ Verification Status: Certified Digital Study Material
                                   <div className="flex items-center gap-2 shrink-0">
                                     <button
                                       onClick={() => handleOpenAttachment(res.name)}
-                                      className="text-[9px] font-mono font-bold text-purple-800 hover:text-purple-950 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-xl border border-purple-100/50 transition-all cursor-pointer shadow-xs"
+                                      disabled={isOpeningAttachment !== null}
+                                      className="text-[9px] font-mono font-bold text-purple-800 hover:text-purple-950 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-xl border border-purple-100/50 transition-all cursor-pointer shadow-xs disabled:opacity-40"
                                     >
-                                      VIEW / OPEN
+                                      {isOpeningAttachment === res.name ? "OPENING..." : "VIEW / OPEN"}
                                     </button>
                                     <button
                                       onClick={() => handleDownload(res.name)}
@@ -1030,9 +1058,10 @@ Verification Status: Certified Digital Study Material
                         <div className="flex items-center gap-2 shrink-0">
                           <button
                             onClick={() => handleOpenAttachment(res.name)}
-                            className="text-[9px] font-mono font-bold text-purple-800 hover:text-purple-950 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-xl border border-purple-100/50 transition-all cursor-pointer shadow-xs"
+                            disabled={isOpeningAttachment !== null}
+                            className="text-[9px] font-mono font-bold text-purple-800 hover:text-purple-950 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-xl border border-purple-100/50 transition-all cursor-pointer shadow-xs disabled:opacity-40"
                           >
-                            VIEW / OPEN
+                            {isOpeningAttachment === res.name ? "OPENING..." : "VIEW / OPEN"}
                           </button>
                           <button
                             onClick={() => handleDownload(res.name)}
@@ -1088,9 +1117,10 @@ Verification Status: Certified Digital Study Material
                                <div className="flex items-center gap-1.5 shrink-0">
                                  <button
                                    onClick={() => handleOpenAttachment(res.name)}
-                                   className="text-[8px] font-mono font-bold text-purple-800 hover:text-purple-950 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded-lg border border-purple-100/50 transition-all cursor-pointer"
+                                   disabled={isOpeningAttachment !== null}
+                                   className="text-[8px] font-mono font-bold text-purple-800 hover:text-purple-950 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded-lg border border-purple-100/50 transition-all cursor-pointer disabled:opacity-40"
                                  >
-                                   VIEW
+                                   {isOpeningAttachment === res.name ? "..." : "VIEW"}
                                  </button>
                                  <button
                                    onClick={() => handleDownload(res.name)}
