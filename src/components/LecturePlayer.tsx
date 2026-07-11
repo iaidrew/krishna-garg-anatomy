@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Play, Pause, ChevronRight, BookOpen, Volume2, FastForward, Maximize, Landmark, CheckCircle2, FileText, Bookmark, Clock, ArrowLeft, Send, Sparkles, AlertCircle, X, Eye, Type, Download, Moon, Sun, Check, ExternalLink } from "lucide-react";
 import { Course, Lecture, TimestampNote } from "../types";
 import { getApiBaseUrl } from "../firebase";
+import { getFileFromFirestoreClient } from "../dbService";
 
 interface LecturePlayerProps {
   courses: Course[];
@@ -154,7 +155,7 @@ export default function LecturePlayer({
 
   // Streamlined viewer for opening files/attachments directly
   const handleOpenAttachment = async (name: string) => {
-    // Check if the actual File is cached in our global in-memory session object
+    // 1. Check if the actual File is cached in our global in-memory session object
     const globalRegistry = (window as any).gargUploadedFiles || {};
     const cachedFile = globalRegistry[name];
 
@@ -166,6 +167,17 @@ export default function LecturePlayer({
 
     setIsOpeningAttachment(name);
     try {
+      // 2. Direct cloud restore from Firestore (ideal for Netlify & container scale-downs!)
+      const dbBase64 = await getFileFromFirestoreClient(name);
+      if (dbBase64) {
+        const response = await fetch(dbBase64);
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        window.open(objectUrl, "_blank");
+        return;
+      }
+
+      // 3. Fallback to Express backend (legacy compatibility)
       const response = await fetch(`${getApiBaseUrl()}/api/download/${encodeURIComponent(name)}`);
       if (!response.ok) {
         throw new Error("File not found on server");
@@ -197,18 +209,52 @@ export default function LecturePlayer({
 
 
   // Trigger real physical file downloads on client devices
-  const handleDownload = (name: string) => {
+  const handleDownload = async (name: string) => {
     setIsDownloading(name);
     
-    // Attempt download from backend server directory first
-    fetch(`${getApiBaseUrl()}/api/download/${encodeURIComponent(name)}`)
-      .then((res) => {
-        if (res.ok) {
-          return res.blob();
-        }
-        throw new Error("File not found on server, fallback to client-side generation.");
-      })
-      .then((blob) => {
+    try {
+      // 1. Check if the actual File is cached in our global in-memory session object
+      const globalRegistry = (window as any).gargUploadedFiles || {};
+      const cachedFile = globalRegistry[name];
+
+      if (cachedFile && (cachedFile instanceof File || cachedFile instanceof Blob)) {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(cachedFile);
+        link.download = name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        
+        setSuccessNotification(`Successfully downloaded "${name}" to your device.`);
+        setTimeout(() => setSuccessNotification(null), 4000);
+        setIsDownloading(null);
+        return;
+      }
+
+      // 2. Direct cloud download from Firestore (ideal for Netlify & container scale-downs!)
+      const dbBase64 = await getFileFromFirestoreClient(name);
+      if (dbBase64) {
+        const res = await fetch(dbBase64);
+        const blob = await res.blob();
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+
+        setSuccessNotification(`Successfully downloaded "${name}" to your device.`);
+        setTimeout(() => setSuccessNotification(null), 4000);
+        setIsDownloading(null);
+        return;
+      }
+
+      // 3. Fallback to Express backend directory
+      const serverRes = await fetch(`${getApiBaseUrl()}/api/download/${encodeURIComponent(name)}`);
+      if (serverRes.ok) {
+        const blob = await serverRes.blob();
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.download = name;
@@ -220,34 +266,19 @@ export default function LecturePlayer({
         setSuccessNotification(`Successfully downloaded "${name}" to your device.`);
         setTimeout(() => setSuccessNotification(null), 4000);
         setIsDownloading(null);
-      })
-      .catch((err) => {
-        console.warn(err.message);
-        
-        // Check if the actual File is cached in our global in-memory session object
-        const globalRegistry = (window as any).gargUploadedFiles || {};
-        const cachedFile = globalRegistry[name];
-
-        if (cachedFile && (cachedFile instanceof File || cachedFile instanceof Blob)) {
-          // Download the exact File uploaded by the admin
-          const link = document.createElement("a");
-          link.href = URL.createObjectURL(cachedFile);
-          link.download = name;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(link.href);
-          
-          setSuccessNotification(`Successfully downloaded "${name}" to your device.`);
-          setTimeout(() => setSuccessNotification(null), 4000);
-          setIsDownloading(null);
-        } else {
-          // Fallback: Dynamically generate a standards-compliant PDF or text document so it displays correctly
-          const ext = name.split('.').pop()?.toLowerCase() || "";
-          
-          if (ext === "pdf") {
-            // A syntactically valid minimal PDF structure to prevent viewer/browser security crashes
-            const pdfTemplate = `%PDF-1.4
+        return;
+      }
+      
+      throw new Error("File not found on server or Firestore, fallback to client-side generation.");
+    } catch (err: any) {
+      console.warn(err.message);
+      
+      // Fallback: Dynamically generate a standards-compliant PDF or text document so it displays correctly
+      const ext = name.split('.').pop()?.toLowerCase() || "";
+      
+      if (ext === "pdf") {
+        // A syntactically valid minimal PDF structure to prevent viewer/browser security crashes
+        const pdfTemplate = `%PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
 endobj
@@ -295,48 +326,37 @@ trailer
 startxref
 591
 %%EOF`;
-            
-            // Convert to a binary array/blob to preserve PDF format bytes
-            const bytes = new Uint8Array(pdfTemplate.length);
-            for (let i = 0; i < pdfTemplate.length; i++) {
-              bytes[i] = pdfTemplate.charCodeAt(i);
-            }
-            
-            const blob = new Blob([bytes], { type: "application/pdf" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = name;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
-          } else {
-            // Non-PDF fallback (e.g. general plain text study file)
-            const fileContent = `========================================================================
-DR. KRISHNA GARG ANATOMY LIBRARY - ACADEMIC STUDY HANDOUT
-========================================================================
-Chief Editor: Dr. Krishna Garg, MS, PhD, FAMS, FIMSA, FIAMS, FASI
-Former Professor & Head of Department of Anatomy, Lady Hardinge Medical College, New Delhi
-------------------------------------------------------------------------
-Document Name: ${name}
-Generated: ${new Date().toLocaleDateString()}
-Verification Status: Certified Digital Study Material
-`;
-            const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = name;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
-          }
-          
-          setSuccessNotification(`Successfully downloaded "${name}" to your device.`);
-          setTimeout(() => setSuccessNotification(null), 4000);
-          setIsDownloading(null);
+        
+        // Convert to a binary array/blob to preserve PDF format bytes
+        const bytes = new Uint8Array(pdfTemplate.length);
+        for (let i = 0; i < pdfTemplate.length; i++) {
+          bytes[i] = pdfTemplate.charCodeAt(i);
         }
-      });
+        
+        const blob = new Blob([bytes], { type: "application/pdf" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      } else {
+        const textTemplate = `DR. KRISHNA GARG ANATOMY LIBRARY\n\nStudy Handout: ${name}\n\nThis study material belongs to the official archives of Dr. Krishna Garg.`;
+        const blob = new Blob([textTemplate], { type: "text/plain" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      }
+      
+      setSuccessNotification(`Downloaded standard handout for "${name}".`);
+      setTimeout(() => setSuccessNotification(null), 4000);
+      setIsDownloading(null);
+    }
   };
 
   // Duration Formatter Helper

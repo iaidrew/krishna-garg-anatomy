@@ -388,5 +388,95 @@ export async function deleteResourceFromLecture(courseId: string, lectureId: str
   }
 }
 
+/**
+ * Client-side helper to chunk and save a file (base64 string) directly to Firestore.
+ * This guarantees durable cloud persistence independent of server filesystem states.
+ */
+export async function saveFileToFirestoreClient(filename: string, base64Content: string): Promise<void> {
+  try {
+    const CHUNK_SIZE = 800 * 1024; // 800 KB chunks (well below the 1MB document limit)
+    const totalChunks = Math.ceil(base64Content.length / CHUNK_SIZE);
+    
+    console.log(`[Firestore Client] Backing up ${filename} in ${totalChunks} chunks...`);
+    const fileDocRef = doc(db, "files", filename);
+    await setDoc(fileDocRef, {
+      filename,
+      totalChunks,
+      secret: "GARG_SERVER_SECRET_2026",
+      uploadedAt: new Date().toISOString()
+    });
+
+    const chunkPromises = [];
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, base64Content.length);
+      const chunkData = base64Content.substring(start, end);
+
+      const chunkDocRef = doc(db, "files", filename, "chunks", `chunk_${i}`);
+      chunkPromises.push(
+        setDoc(chunkDocRef, {
+          index: i,
+          data: chunkData,
+          secret: "GARG_SERVER_SECRET_2026"
+        })
+      );
+    }
+    await Promise.all(chunkPromises);
+    console.log(`[Firestore Client] Successfully backed up ${filename} to cloud (${totalChunks} chunks).`);
+  } catch (err) {
+    console.error(`[Firestore Client] Failed to backup ${filename} to Firestore:`, err);
+    throw err;
+  }
+}
+
+/**
+ * Client-side helper to retrieve all chunks of a file from Firestore and reconstitute the full base64 content.
+ */
+export async function getFileFromFirestoreClient(filename: string): Promise<string | null> {
+  try {
+    const fileDocRef = doc(db, "files", filename);
+    const fileSnap = await getDoc(fileDocRef);
+    if (!fileSnap.exists()) {
+      console.log(`[Firestore Client] No backup found in Firestore for ${filename}`);
+      return null;
+    }
+
+    const fileData = fileSnap.data();
+    const totalChunks = fileData?.totalChunks || 0;
+    if (totalChunks <= 0) {
+      console.warn(`[Firestore Client] File document found for ${filename} but totalChunks is 0`);
+      return null;
+    }
+
+    console.log(`[Firestore Client] Retrieving ${filename} from cloud (${totalChunks} chunks)...`);
+
+    // Fetch all chunks from subcollection
+    const chunksCollRef = collection(db, "files", filename, "chunks");
+    const querySnap = await getDocs(chunksCollRef);
+    const chunksMap: { [key: number]: string } = {};
+    querySnap.forEach((docSnap) => {
+      const chunk = docSnap.data();
+      if (typeof chunk.index === "number" && typeof chunk.data === "string") {
+        chunksMap[chunk.index] = chunk.data;
+      }
+    });
+
+    // Reconstruct the full base64 content in memory
+    let fullBase64 = "";
+    for (let i = 0; i < totalChunks; i++) {
+      if (chunksMap[i] === undefined) {
+        console.error(`[Firestore Client] Missing chunk index ${i} for file ${filename}`);
+        return null;
+      }
+      fullBase64 += chunksMap[i];
+    }
+
+    return fullBase64;
+  } catch (err) {
+    console.error(`[Firestore Client] Failed to retrieve file ${filename} from Firestore:`, err);
+    return null;
+  }
+}
+
 
 

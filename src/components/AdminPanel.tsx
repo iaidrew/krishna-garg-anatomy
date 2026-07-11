@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ShieldCheck, Video, Clock, Key, FileText, Plus, CheckCircle2, Lock, Unlock, Copy, Trash2, Globe, AlertTriangle, Sparkles, RefreshCw, Image, Upload, Mail, MessageSquare, Calendar, User, Smartphone, X } from "lucide-react";
 import { Course, Lecture, Resource } from "../types";
 import { mainTeacher } from "../data";
-import { subscribeContacts, deleteContactFromDb, updateContactReadStatus, subscribeAdmins, addAdminEmail, removeAdminEmail, subscribeUsers, updateUserRole, getAdminPasscode, updateAdminPasscode, deleteUserFromDb, deleteResourceFromLecture } from "../dbService";
+import { subscribeContacts, deleteContactFromDb, updateContactReadStatus, subscribeAdmins, addAdminEmail, removeAdminEmail, subscribeUsers, updateUserRole, getAdminPasscode, updateAdminPasscode, deleteUserFromDb, deleteResourceFromLecture, saveFileToFirestoreClient } from "../dbService";
 import { getApiBaseUrl } from "../firebase";
 
 // Safe fallback definitions (no longer relied upon directly as we use rich state modals)
@@ -234,10 +234,20 @@ export default function AdminPanel({
       // Store File object in global window registry
       (window as any).gargUploadedFiles[file.name] = file;
 
-      // Real-time asynchronous upload to Express disk storage
+      // Real-time asynchronous upload to Express disk storage & Firestore Cloud
       const reader = new FileReader();
       reader.onload = async (event) => {
         const base64Content = event.target?.result as string;
+
+        // 1. Direct 100% durable cloud backup in Firestore (unaffected by server container restarts or hosting platform)
+        try {
+          await saveFileToFirestoreClient(file.name, base64Content);
+          console.log(`[Admin] Successfully saved ${file.name} directly to Firestore cloud.`);
+        } catch (fsErr) {
+          console.error(`[Admin] Firestore direct backup failed for ${file.name}:`, fsErr);
+        }
+
+        // 2. Secondary legacy Express file save (non-blocking fallback)
         try {
           await fetch(`${getApiBaseUrl()}/api/upload`, {
             method: "POST",
@@ -251,7 +261,7 @@ export default function AdminPanel({
           });
           console.log(`Successfully uploaded & synchronized ${file.name} to server filesystem.`);
         } catch (uploadErr) {
-          console.error(`Failed to upload ${file.name} to Express backend:`, uploadErr);
+          console.warn(`Legacy Express upload omitted/failed for ${file.name}:`, uploadErr);
         }
       };
       reader.readAsDataURL(file);
