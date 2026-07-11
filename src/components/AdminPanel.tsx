@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ShieldCheck, Video, Clock, Key, FileText, Plus, CheckCircle2, Lock, Unlock, Copy, Trash2, Globe, AlertTriangle, Sparkles, RefreshCw, Image, Upload, Mail, MessageSquare, Calendar, User, Smartphone, X } from "lucide-react";
+import { ShieldCheck, Video, Clock, Key, FileText, Plus, CheckCircle2, Lock, Unlock, Copy, Trash2, Globe, AlertTriangle, Sparkles, RefreshCw, Image, Upload, Mail, MessageSquare, Calendar, User, Smartphone, X, Edit } from "lucide-react";
 import { Course, Lecture, Resource } from "../types";
 import { mainTeacher } from "../data";
 import { subscribeContacts, deleteContactFromDb, updateContactReadStatus, subscribeAdmins, addAdminEmail, removeAdminEmail, subscribeUsers, updateUserRole, getAdminPasscode, updateAdminPasscode, deleteUserFromDb, deleteResourceFromLecture, saveFileToFirestoreClient } from "../dbService";
@@ -39,6 +39,37 @@ export default function AdminPanel({
 }: AdminPanelProps) {
   // Material type selection state
   const [uploadType, setUploadType] = useState<"video" | "document">("video");
+
+  // Lecture editing state
+  const [editingLecture, setEditingLecture] = useState<{
+    courseId: string;
+    lecture: Lecture;
+  } | null>(null);
+
+  // Edit Lecture Modal Form States
+  const [editLectureTitle, setEditLectureTitle] = useState("");
+  const [editLectureDesc, setEditLectureDesc] = useState("");
+  const [editLecturePassword, setEditLecturePassword] = useState("");
+  const [editLectureResourcesList, setEditLectureResourcesList] = useState<Resource[]>([]);
+  const [editLectureResourceName, setEditLectureResourceName] = useState("");
+  const [editLectureVideoUrl, setEditLectureVideoUrl] = useState("");
+  const [editLectureDuration, setEditLectureDuration] = useState("");
+  const [editLectureVideoSource, setEditLectureVideoSource] = useState<"link" | "file">("link");
+  const [editLectureLocalVideoFile, setEditLectureLocalVideoFile] = useState<File | null>(null);
+
+  React.useEffect(() => {
+    if (editingLecture) {
+      setEditLectureTitle(editingLecture.lecture.title);
+      setEditLectureDesc(editingLecture.lecture.description || "");
+      setEditLecturePassword(editingLecture.lecture.password || "");
+      setEditLectureResourcesList(editingLecture.lecture.resources || []);
+      setEditLectureVideoUrl(editingLecture.lecture.videoUrl || "");
+      setEditLectureDuration(editingLecture.lecture.duration || "15:00");
+      setEditLectureVideoSource("link");
+      setEditLectureLocalVideoFile(null);
+      setEditLectureResourceName("");
+    }
+  }, [editingLecture]);
 
   // Custom premium interactive dialogs for sandbox environments
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -342,6 +373,30 @@ export default function AdminPanel({
         return;
       }
 
+      const trimmedPassword = password.trim();
+      if (trimmedPassword) {
+        let duplicateLecture: Lecture | null = null;
+        let duplicateCourse: Course | null = null;
+        for (const c of courses) {
+          for (const l of c.lectures) {
+            if (l.password && l.password.trim().toLowerCase() === trimmedPassword.toLowerCase()) {
+              duplicateLecture = l;
+              duplicateCourse = c;
+              break;
+            }
+          }
+          if (duplicateLecture) break;
+        }
+
+        if (duplicateLecture) {
+          triggerAlert(
+            "Duplicate Password Contradiction",
+            `The secure password "${trimmedPassword}" is already assigned to folder/lecture "${duplicateLecture.title}" under course folder "${duplicateCourse?.title}". Every passcode-protected folder must have a completely unique password to ensure correct routing for student access. Please assign a different secure password.`
+          );
+          return;
+        }
+      }
+
       // Convert duration MM:SS to seconds
       const parts = duration.split(":");
       let secs = 600;
@@ -404,6 +459,30 @@ export default function AdminPanel({
         return;
       }
 
+      const trimmedPassword = docPassword.trim();
+      if (trimmedPassword) {
+        let duplicateLecture: Lecture | null = null;
+        let duplicateCourse: Course | null = null;
+        for (const c of courses) {
+          for (const l of c.lectures) {
+            if (l.password && l.password.trim().toLowerCase() === trimmedPassword.toLowerCase()) {
+              duplicateLecture = l;
+              duplicateCourse = c;
+              break;
+            }
+          }
+          if (duplicateLecture) break;
+        }
+
+        if (duplicateLecture) {
+          triggerAlert(
+            "Duplicate Password Contradiction",
+            `The secure password "${trimmedPassword}" is already assigned to folder/lecture "${duplicateLecture.title}" under course folder "${duplicateCourse?.title}". Every passcode-protected folder must have a completely unique password to ensure correct routing for student access. Please assign a different secure password.`
+          );
+          return;
+        }
+      }
+
       const docFolderTitle = docTitle.trim() || "Course Study Materials";
 
       const newDocLecture: Lecture = {
@@ -458,6 +537,170 @@ export default function AdminPanel({
       setCopiedLectureId(lecture.id);
       setTimeout(() => setCopiedLectureId(null), 3000);
     });
+  };
+
+  const handleEditDocAttachmentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    if (!(window as any).gargUploadedFiles) {
+      (window as any).gargUploadedFiles = {};
+    }
+    
+    const newResources: Resource[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      const ext = file.name.split('.').pop()?.toUpperCase() || "PDF";
+      newResources.push({
+        name: file.name,
+        size: `${sizeMB} MB`,
+        type: ext
+      });
+      (window as any).gargUploadedFiles[file.name] = file;
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const base64Content = event.target?.result as string;
+
+        try {
+          await saveFileToFirestoreClient(file.name, base64Content);
+          console.log(`[Admin Edit] Saved ${file.name} to Firestore cloud.`);
+        } catch (fsErr) {
+          console.error(`[Admin Edit] Firestore direct backup failed:`, fsErr);
+        }
+
+        try {
+          await fetch(`${getApiBaseUrl()}/api/upload`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ filename: file.name, content: base64Content }),
+          });
+          console.log(`[Admin Edit] Synced ${file.name} to server filesystem.`);
+        } catch (uploadErr) {
+          console.warn(`[Admin Edit] Server upload omitted/failed:`, uploadErr);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+    setEditLectureResourcesList([...editLectureResourcesList, ...newResources]);
+  };
+
+  const handleEditDocAddResource = () => {
+    if (!editLectureResourceName.trim()) return;
+    const sizeNum = (Math.random() * 3 + 1).toFixed(1);
+    const extensions = ["PDF", "XLS", "IMAGE", "DOCX"];
+    const ext = extensions[Math.floor(Math.random() * extensions.length)];
+
+    const newRes: Resource = {
+      name: editLectureResourceName.trim() + (editLectureResourceName.includes(".") ? "" : "." + ext.toLowerCase()),
+      size: `${sizeNum} MB`,
+      type: ext
+    };
+
+    setEditLectureResourcesList([...editLectureResourcesList, newRes]);
+    setEditLectureResourceName("");
+  };
+
+  const handleEditDocRemoveResource = (index: number) => {
+    setEditLectureResourcesList(editLectureResourcesList.filter((_, i) => i !== index));
+  };
+
+  const handleEditLocalVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditLectureLocalVideoFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setEditLectureVideoUrl(objectUrl);
+    
+    const tempVideo = document.createElement("video");
+    tempVideo.src = objectUrl;
+    tempVideo.onloadedmetadata = () => {
+      const minutes = Math.floor(tempVideo.duration / 60);
+      const seconds = Math.floor(tempVideo.duration % 60);
+      setEditLectureDuration(`${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`);
+    };
+  };
+
+  const handleSaveEditLecture = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingLecture) return;
+
+    const trimmedPassword = editLecturePassword.trim();
+    if (trimmedPassword) {
+      let duplicateLecture: Lecture | null = null;
+      let duplicateCourse: Course | null = null;
+      for (const c of courses) {
+        for (const l of c.lectures) {
+          if (l.id !== editingLecture.lecture.id && l.password && l.password.trim().toLowerCase() === trimmedPassword.toLowerCase()) {
+            duplicateLecture = l;
+            duplicateCourse = c;
+            break;
+          }
+        }
+        if (duplicateLecture) break;
+      }
+
+      if (duplicateLecture) {
+        triggerAlert(
+          "Duplicate Password Contradiction",
+          `The secure password "${trimmedPassword}" is already assigned to folder/lecture "${duplicateLecture.title}" under course folder "${duplicateCourse?.title}". Every passcode-protected folder must have a completely unique password to ensure correct routing for student access. Please assign a different secure password.`
+        );
+        return;
+      }
+    }
+
+    if (!editLectureTitle.trim()) {
+      triggerAlert("Validation Error", "Please provide a name/title for this folder/lecture.");
+      return;
+    }
+
+    const parts = editLectureDuration.split(":");
+    let secs = 600;
+    if (parts.length === 2) {
+      secs = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+    }
+
+    let finalVideoUrl = editLectureVideoUrl;
+    if (editLectureVideoSource === "file" && editLectureLocalVideoFile) {
+      const targetCourse = courses.find(c => c.id === editingLecture.courseId);
+      const category = targetCourse ? targetCourse.category : "Neuroanatomy";
+      if (category === "Neuroanatomy") {
+        finalVideoUrl = "https://www.youtube.com/embed/9M8n-kXbMGo";
+      } else if (category === "Cardiovascular") {
+        finalVideoUrl = "https://www.youtube.com/embed/5Ue0_k18S6Q";
+      } else if (category === "Osteology") {
+        finalVideoUrl = "https://www.youtube.com/embed/F3_8f_V417Q";
+      } else {
+        finalVideoUrl = "https://www.youtube.com/embed/9M8n-kXbMGo";
+      }
+    }
+
+    const updatedLecture: Lecture = {
+      ...editingLecture.lecture,
+      title: editLectureTitle.trim(),
+      description: editLectureDesc.trim(),
+      password: trimmedPassword ? trimmedPassword : undefined,
+      resources: editLectureResourcesList,
+      videoUrl: finalVideoUrl,
+      duration: editLectureDuration,
+      seconds: secs
+    };
+
+    const targetCourse = courses.find(c => c.id === editingLecture.courseId);
+    if (targetCourse && onUpdateCourseLectures) {
+      const updatedLectures = targetCourse.lectures.map(l => l.id === editingLecture.lecture.id ? updatedLecture : l);
+      try {
+        await onUpdateCourseLectures(targetCourse.id, updatedLectures);
+        setEditingLecture(null);
+        setSuccessMessage(`Successfully updated folder/lecture "${updatedLecture.title}"!`);
+        setTimeout(() => setSuccessMessage(null), 5000);
+      } catch (err: any) {
+        triggerAlert("Update Failed", err.message || "An error occurred while updating the lecture folder.");
+      }
+    } else {
+      triggerAlert("Error", "Could not locate the course folder or update callback.");
+    }
   };
 
   return (
@@ -1855,6 +2098,20 @@ export default function AdminPanel({
                                 )}
                               </button>
 
+                              {/* Edit Lecture Folder Button */}
+                              <button
+                                onClick={() => {
+                                  setEditingLecture({
+                                    courseId: course.id,
+                                    lecture: lec
+                                  });
+                                }}
+                                className="p-1.5 text-slate-400 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors cursor-pointer"
+                                title="Edit Folder Properties & Materials"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+
                               {/* Allow deleting any lecture from catalog or manual uploads */}
                               <button
                                 onClick={() => {
@@ -1884,6 +2141,269 @@ export default function AdminPanel({
         </div>
       </div>
       )}
+
+      {/* ========================================== */}
+      {/* EDIT LECTURE FOLDER INTERACTIVE MODAL      */}
+      {/* ========================================== */}
+      <AnimatePresence>
+        {editingLecture && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+            {/* Backdrop Blur */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setEditingLecture(null)}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+            />
+            
+            {/* Modal Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: "spring", duration: 0.4 }}
+              className="relative w-full max-w-2xl bg-white border border-purple-100 rounded-3xl p-6 shadow-2xl space-y-5 z-10 my-8 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-700 font-bold shrink-0">
+                    <Edit className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold font-display text-purple-950">
+                      Edit Study Folder / Lecture
+                    </h4>
+                    <p className="text-[10px] text-slate-400 font-mono">
+                      Update resources, name, description, and secure password.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setEditingLecture(null)}
+                  className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-slate-700 rounded-xl transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEditLecture} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Title */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono font-bold text-slate-500 uppercase block">Name / Title</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Brainstem Dissection and Cranial Nerves"
+                      value={editLectureTitle}
+                      onChange={(e) => setEditLectureTitle(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-purple-300 transition-all font-medium"
+                    />
+                  </div>
+
+                  {/* Private Password */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono font-bold text-slate-500 uppercase block">Private Password (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="Enter unique password (or empty for public)"
+                      value={editLecturePassword}
+                      onChange={(e) => setEditLecturePassword(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-purple-300 transition-all font-mono"
+                    />
+                    <p className="text-[8px] text-slate-400 font-mono mt-0.5 leading-tight">Every passcode must be unique to avoid student-side opening conflicts.</p>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold text-slate-500 uppercase block">Description</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Brief note summarizing this study folder..."
+                    value={editLectureDesc}
+                    onChange={(e) => setEditLectureDesc(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-purple-300 transition-all resize-none font-light"
+                  />
+                </div>
+
+                {/* If it's a video lecture, show video options */}
+                {editingLecture.lecture.videoUrl && (
+                  <div className="bg-slate-50 border border-slate-150 p-4 rounded-2xl space-y-3">
+                    <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider block">
+                      Video Source Configuration
+                    </span>
+
+                    <div className="grid grid-cols-2 gap-2 p-1 bg-white border border-slate-200 rounded-xl max-w-sm">
+                      <button
+                        type="button"
+                        onClick={() => setEditLectureVideoSource("link")}
+                        className={`py-1 text-[9px] font-mono font-bold uppercase rounded-lg transition-all cursor-pointer ${
+                          editLectureVideoSource === "link"
+                            ? "bg-purple-950 text-white shadow-sm"
+                            : "text-slate-600 hover:text-slate-900"
+                        }`}
+                      >
+                        Web Link
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditLectureVideoSource("file");
+                          setEditLectureVideoUrl("");
+                          setEditLectureDuration("00:00");
+                        }}
+                        className={`py-1 text-[9px] font-mono font-bold uppercase rounded-lg transition-all cursor-pointer ${
+                          editLectureVideoSource === "file"
+                            ? "bg-purple-950 text-white shadow-sm"
+                            : "text-slate-600 hover:text-slate-900"
+                        }`}
+                      >
+                        Upload Local Video
+                      </button>
+                    </div>
+
+                    {editLectureVideoSource === "link" ? (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          required={editLectureVideoSource === "link"}
+                          placeholder="Enter YouTube or MP4 video URL..."
+                          value={editLectureVideoUrl}
+                          onChange={(e) => setEditLectureVideoUrl(e.target.value)}
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-purple-300 transition-all font-mono"
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="border-2 border-dashed border-purple-200 hover:border-purple-400 rounded-xl p-4 text-center bg-white transition-colors relative cursor-pointer group">
+                          <input
+                            type="file"
+                            accept="video/*"
+                            required={editLectureVideoSource === "file" && !editLectureLocalVideoFile}
+                            onChange={handleEditLocalVideoUpload}
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                          />
+                          <p className="text-xs font-semibold text-slate-700">
+                            {editLectureLocalVideoFile ? editLectureLocalVideoFile.name : "Select or drag a local video file here"}
+                          </p>
+                          <p className="text-[8px] text-slate-400 font-mono mt-0.5">
+                            {editLectureLocalVideoFile ? `${(editLectureLocalVideoFile.size / (1024 * 1024)).toFixed(1)} MB` : "MP4, MOV, or WEBM"}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="w-32 space-y-1">
+                      <label className="text-[9px] font-mono font-bold text-slate-400 uppercase block">Duration (MM:SS)</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="15:00"
+                        value={editLectureDuration}
+                        onChange={(e) => setEditLectureDuration(e.target.value)}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 outline-none font-mono text-center"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* STUDY MATERIALS (FILES/RESOURCES) */}
+                <div className="space-y-3 bg-teal-50/20 border border-teal-100/50 p-4 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold text-teal-800 uppercase tracking-wider block">
+                      Study Materials / File Attachments
+                    </span>
+                    <span className="text-[9px] font-mono font-bold bg-teal-50 text-teal-800 px-2 py-0.5 rounded border border-teal-100">
+                      {editLectureResourcesList.length} Files
+                    </span>
+                  </div>
+
+                  {/* Attachment selector */}
+                  <div className="border border-dashed border-teal-200 hover:border-teal-400 rounded-xl p-4 text-center bg-white transition-all relative cursor-pointer group flex flex-col items-center justify-center min-h-[80px]">
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleEditDocAttachmentUpload}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                    <Upload className="w-4 h-4 text-teal-600 mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-bold text-slate-700">Add Study Files (PDFs, Handouts, Slides)</span>
+                    <span className="text-[8px] text-slate-400 mt-0.5">Drag & drop or click to browse</span>
+                  </div>
+
+                  {/* Manual file name input */}
+                  <div className="flex gap-2 items-center pt-1">
+                    <input
+                      type="text"
+                      placeholder="Or type manual file resource name..."
+                      value={editLectureResourceName}
+                      onChange={(e) => setEditLectureResourceName(e.target.value)}
+                      className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 outline-none focus:border-teal-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleEditDocAddResource}
+                      className="bg-teal-50 border border-teal-200 hover:bg-teal-100 text-teal-800 px-3 py-1.5 rounded-xl text-[9px] font-mono font-bold uppercase tracking-wider cursor-pointer"
+                    >
+                      Add Manual
+                    </button>
+                  </div>
+
+                  {/* File Queue List */}
+                  {editLectureResourcesList.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 max-h-[160px] overflow-y-auto pr-1">
+                      {editLectureResourcesList.map((res, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-white border border-slate-100 p-2 rounded-xl flex items-center justify-between shadow-sm"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-6 h-6 rounded bg-teal-50 text-teal-700 border border-teal-100 flex items-center justify-center font-mono text-[8px] font-bold shrink-0">
+                              {res.type}
+                            </div>
+                            <div className="leading-tight min-w-0">
+                              <p className="text-[10px] font-bold text-slate-800 truncate" title={res.name}>{res.name}</p>
+                              <p className="text-[8px] font-mono text-slate-400">{res.size}</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleEditDocRemoveResource(idx)}
+                            className="text-rose-500 hover:text-rose-700 font-bold px-2 py-1 text-sm cursor-pointer"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[9px] text-slate-400 italic text-center py-2">No attachments inside this folder/lecture.</p>
+                  )}
+                </div>
+
+                {/* Submit / Cancel Footer */}
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setEditingLecture(null)}
+                    className="px-4 py-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 rounded-xl text-xs font-bold transition-all cursor-pointer active:scale-[0.98]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-purple-950 hover:bg-purple-900 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md active:scale-[0.98]"
+                  >
+                    Save Folder Changes
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ========================================== */}
       {/* CUSTOM PREMIUM INTERACTIVE DIALOG OVERLAYS */}
