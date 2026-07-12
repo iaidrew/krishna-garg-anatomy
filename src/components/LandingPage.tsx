@@ -583,6 +583,17 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
 
         <div className="max-w-5xl mx-auto px-3 sm:px-4 mt-8 pt-6 border-t border-purple-50 text-center text-[9px] font-mono text-slate-400 tracking-wider">
           © 2026 DR. KRISHNA GARG ANATOMY. ALL RIGHTS RESERVED.
+          <p className="mt-2">
+            BUILT, DEVELOPED &amp; DESIGNED BY{' '}
+            <a
+              href="https://opsiys.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-purple-600 hover:text-purple-700 transition-colors"
+            >
+              OPSIYS
+            </a>
+          </p>
         </div>
       </footer>
     </div>
