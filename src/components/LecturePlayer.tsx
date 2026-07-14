@@ -39,6 +39,18 @@ export default function LecturePlayer({
   const [isOpeningAttachment, setIsOpeningAttachment] = useState<string | null>(null);
   const [successNotification, setSuccessNotification] = useState<string | null>(null);
 
+  // File viewer state
+  const [viewerDoc, setViewerDoc] = useState<{ name: string; url: string; type: string } | null>(null);
+
+  const closeDocViewer = () => {
+    if (viewerDoc) {
+      if (viewerDoc.url.startsWith("blob:")) {
+        URL.revokeObjectURL(viewerDoc.url);
+      }
+      setViewerDoc(null);
+    }
+  };
+
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const coursesCategories = ["All", "Neuroanatomy", "Cardiovascular", "Osteology"];
@@ -153,27 +165,29 @@ export default function LecturePlayer({
     setNewNoteText("");
   };
 
-  // Streamlined viewer for opening files/attachments directly
+  // Streamlined viewer for opening files/attachments directly in-app
   const handleOpenAttachment = async (name: string) => {
-    // 1. Check if the actual File is cached in our global in-memory session object
-    const globalRegistry = (window as any).gargUploadedFiles || {};
-    const cachedFile = globalRegistry[name];
-
-    if (cachedFile && (cachedFile instanceof File || cachedFile instanceof Blob)) {
-      const objectUrl = URL.createObjectURL(cachedFile);
-      window.open(objectUrl, "_blank");
-      return;
-    }
-
     setIsOpeningAttachment(name);
     try {
+      const ext = name.split(".").pop()?.toLowerCase() || "";
+
+      // 1. Check if the actual File is cached in our global in-memory session object
+      const globalRegistry = (window as any).gargUploadedFiles || {};
+      const cachedFile = globalRegistry[name];
+
+      if (cachedFile && (cachedFile instanceof File || cachedFile instanceof Blob)) {
+        const objectUrl = URL.createObjectURL(cachedFile);
+        setViewerDoc({ name, url: objectUrl, type: ext });
+        return;
+      }
+
       // 2. Direct cloud restore from Firestore (ideal for Netlify & container scale-downs!)
       const dbBase64 = await getFileFromFirestoreClient(name);
       if (dbBase64) {
         const response = await fetch(dbBase64);
         const blob = await response.blob();
         const objectUrl = URL.createObjectURL(blob);
-        window.open(objectUrl, "_blank");
+        setViewerDoc({ name, url: objectUrl, type: ext });
         return;
       }
 
@@ -185,7 +199,6 @@ export default function LecturePlayer({
       const blob = await response.blob();
       
       // Determine correct MIME type for in-browser rendering
-      const ext = name.split(".").pop()?.toLowerCase();
       let mimeType = "application/octet-stream";
       if (ext === "pdf") mimeType = "application/pdf";
       else if (ext === "png") mimeType = "image/png";
@@ -196,11 +209,13 @@ export default function LecturePlayer({
 
       const typedBlob = new Blob([blob], { type: mimeType });
       const objectUrl = URL.createObjectURL(typedBlob);
-      window.open(objectUrl, "_blank");
+      setViewerDoc({ name, url: objectUrl, type: ext });
     } catch (err) {
       console.warn("Client-side download fallback triggered due to:", err);
-      // Fallback: direct window open if fetch has any issues
-      window.open(`${getApiBaseUrl()}/api/download/${encodeURIComponent(name)}`, "_blank");
+      // Fallback: direct browser load using iframe with Express endpoint URL
+      const directUrl = `${getApiBaseUrl()}/api/download/${encodeURIComponent(name)}`;
+      const ext = name.split(".").pop()?.toLowerCase() || "";
+      setViewerDoc({ name, url: directUrl, type: ext });
     } finally {
       setIsOpeningAttachment(null);
     }
@@ -1165,6 +1180,124 @@ startxref
         )}
       </AnimatePresence>
 
+      {/* ========================================== */}
+      {/* PREMIUM IN-APP DOCUMENT VIEWER MODAL     */}
+      {/* ========================================== */}
+      <AnimatePresence>
+        {viewerDoc && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            {/* Backdrop Blur */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeDocViewer}
+              className="absolute inset-0 bg-slate-950/75 backdrop-blur-md"
+            />
+            
+            {/* Document Card Container */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 30 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="relative w-full max-w-5xl h-[85vh] bg-white border border-purple-100 rounded-3xl flex flex-col shadow-2xl overflow-hidden z-10"
+            >
+              {/* Header Bar */}
+              <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-slate-100 bg-slate-50 shrink-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold shrink-0 font-mono text-xs uppercase shadow-sm">
+                    {viewerDoc.type || "DOC"}
+                  </div>
+                  <div className="min-w-0 leading-tight">
+                    <h4 className="text-xs font-bold font-display text-purple-950 truncate" title={viewerDoc.name}>
+                      {viewerDoc.name}
+                    </h4>
+                    <span className="text-[9px] text-slate-400 font-mono uppercase">
+                      STUDENT READING PORTAL • {viewerDoc.type} DOCUMENT
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Print Button for PDF */}
+                  {viewerDoc.type === "pdf" && (
+                    <button
+                      onClick={() => {
+                        const printWindow = window.open(viewerDoc.url, "_blank");
+                        if (printWindow) {
+                          printWindow.print();
+                        }
+                      }}
+                      className="p-2 text-slate-500 hover:text-purple-700 hover:bg-purple-50 rounded-xl transition-all cursor-pointer"
+                      title="Print Document"
+                    >
+                      <Type className="w-4 h-4" />
+                    </button>
+                  )}
+                  
+                  {/* Download Action */}
+                  <button
+                    onClick={() => handleDownload(viewerDoc.name)}
+                    disabled={isDownloading !== null}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 hover:bg-teal-100 border border-teal-100 text-teal-800 rounded-xl text-[10px] font-mono font-bold uppercase transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    <Download className="w-3 h-3" />
+                    {isDownloading === viewerDoc.name ? "SAVING..." : "SAVE FILE"}
+                  </button>
+
+                  {/* Fallback Direct Tab */}
+                  <a
+                    href={`${getApiBaseUrl()}/api/download/${encodeURIComponent(viewerDoc.name)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-2 text-slate-500 hover:text-purple-700 hover:bg-purple-50 rounded-xl transition-all"
+                    title="Open in new window (fallback)"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+
+                  {/* Close button */}
+                  <button
+                    onClick={closeDocViewer}
+                    className="p-2 hover:bg-slate-200 text-slate-500 hover:text-slate-800 rounded-xl transition-colors cursor-pointer"
+                    title="Close Viewer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Viewport Core Frame */}
+              <div className="flex-1 bg-slate-100 relative min-h-0 overflow-hidden">
+                {viewerDoc.type === "pdf" ? (
+                  <iframe
+                    src={viewerDoc.url}
+                    className="w-full h-full border-0 bg-white"
+                    title={viewerDoc.name}
+                  />
+                ) : ["png", "jpg", "jpeg", "svg", "gif", "webp"].includes(viewerDoc.type) ? (
+                  <div className="w-full h-full flex items-center justify-center p-6 overflow-auto bg-slate-900/40">
+                    <img
+                      src={viewerDoc.url}
+                      className="max-w-full max-h-full object-contain rounded-2xl shadow-xl border border-slate-200 bg-white"
+                      alt={viewerDoc.name}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center bg-white">
+                    <FileText className="w-16 h-16 text-slate-300 mb-3 animate-pulse" />
+                    <h5 className="text-xs font-bold text-slate-800 font-display">{viewerDoc.name}</h5>
+                    <p className="text-[10px] text-slate-500 max-w-xs mt-1">
+                      This study file cannot be fully previewed in-app. Please use the "SAVE FILE" button above to access the file content directly.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
