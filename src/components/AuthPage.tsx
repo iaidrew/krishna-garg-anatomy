@@ -157,7 +157,11 @@ export default function AuthPage({ onAuthSuccess, minimal = false }: AuthPagePro
     setSuccess(null);
     setLoading(true);
     try {
-      await sendPasswordResetEmail(auth, email.trim());
+      // Return the user to the same branded site domain after Firebase verifies the reset.
+      await sendPasswordResetEmail(auth, email.trim(), {
+        url: `${window.location.origin}/`,
+        handleCodeInApp: false,
+      });
       setSuccess("A password reset link has been dispatched to your email address. Please check your inbox!");
     } catch (err: any) {
       console.error(err);
