@@ -353,7 +353,7 @@ export const testimonials: Testimonial[] = [
     role: "Student",
     university: "Kalka Dental College and Hospital",
     text: "The TMJ mechanics and masticatory muscle videos saved my oral surgery pre-clinicals! Every dental student in India should use this library to ace their university practical spotters and viva boards.",
-    avatar: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=256&h=256",
+    avatar: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto",
     rating: 5
   },
   {
