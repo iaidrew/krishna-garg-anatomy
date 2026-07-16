@@ -499,9 +499,6 @@ All rights reserved (C) Dr. Krishna Garg Anatomy platform.
     }
   });
 
-  // Serve the /assets directory statically so any custom teacher photo or SVG is served reliably
-  app.use("/assets", express.static(path.join(process.cwd(), "assets")));
-
   // Vite development middleware vs Static Production files serving
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -509,7 +506,13 @@ All rights reserved (C) Dr. Krishna Garg Anatomy platform.
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
+  }
+
+  // Vite must handle asset imports in development (for example, image.svg?import)
+  // before Express serves the raw files.
+  app.use("/assets", express.static(path.join(process.cwd(), "assets")));
+
+  if (process.env.NODE_ENV === "production") {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {

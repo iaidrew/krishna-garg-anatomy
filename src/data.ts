@@ -1,6 +1,6 @@
 import { Course, FAQItem, Testimonial, TimelineEvent, QuizQuestion } from "./types";
-import krishnaGargAvatar from "../assets/Krishna-Garg_(1).jpg";
-import krishnaGargIllustration from "../assets/dr_krishna_garg.svg";
+const krishnaGargAvatar = "/assets/Krishna-Garg_(1).jpg";
+const krishnaGargIllustration = "/assets/dr_krishna_garg.svg";
 
 // Faculty profiles focused on BDS & Dental Anatomy
 export const mainTeacher = {

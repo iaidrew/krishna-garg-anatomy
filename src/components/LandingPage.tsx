@@ -30,14 +30,6 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
     }
   };
 
-  // Stats Counters
-  const stats = [
-    { value: "40,000+", label: "Physicians Trained" },
-    { value: "98.7%", label: "Surgical Board Pass Rate" },
-    { value: "35+", label: "Anatomical Manuals Published" },
-    { value: "120+", label: "Anatomy Study Guides" }
-  ];
-
   // Filtering FAQ
   const filteredFaq = faqCategory === "All"
     ? faqData
@@ -54,7 +46,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
 
       {/* HERO SECTION */}
       <section className="relative z-10 max-w-6xl mx-auto px-3 sm:px-4 mt-2 sm:mt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-8 sm:gap-10 lg:gap-12 items-center">
+        <div className="grid grid-cols-1 gap-8 sm:gap-10 items-center">
           {/* Hero Left Content */}
           <div className="space-y-6 sm:space-y-7">
             <motion.div
@@ -86,7 +78,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
                 transition={{ duration: 0.7, delay: 0.2 }}
                 className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl font-light"
               >
-                The Dr. Krishna Garg Anatomy Library is designed to simplify human anatomy, head & neck, and dental studies specifically for students under the personal authorship of India's leading educator.
+                Simplify General Anatomy, Anatomy of Head and Neck, General Embryology of Head and Neck, General Histology, and Histology of Head and Neck were also provided.
               </motion.p>
             </div>
 
@@ -163,23 +155,9 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
               )}
             </motion.div>
 
-            {/* Quick Metrics */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.4 }}
-              className="grid grid-cols-2 gap-3 sm:gap-6 pt-5 border-t border-purple-100 sm:grid-cols-4"
-            >
-              {stats.map((st, i) => (
-                <div key={i} className="space-y-1">
-                  <h3 className="text-xl font-extrabold font-mono text-purple-900 tracking-tight">{st.value}</h3>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold leading-tight">{st.label}</p>
-                </div>
-              ))}
-            </motion.div>
           </div>
 
-          {/* Hero Right Visuals: Interactive anatomy cards */}
+          {false && (
           <div className="relative flex items-center justify-center mt-2 sm:mt-0">
             <div className="relative w-full max-w-[430px] mx-auto">
               <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-purple-100/70 via-white/60 to-teal-100/60 blur-3xl" />
@@ -246,23 +224,21 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
               </motion.div>
             </div>
           </div>
+          )}
         </div>
       </section>
 
-      {/* INSTITUTION HIGHLIGHTS & PLATFORM FEATURES */}
       <section className="relative z-10 max-w-5xl mx-auto px-3 sm:px-4 space-y-10 sm:space-y-16">
         <div className="text-center max-w-2xl mx-auto space-y-4">
           <h2 className="text-[10px] font-mono font-bold tracking-widest text-purple-600 uppercase">
             WHY KRISHNA GARG ANATOMY
           </h2>
           <h3 className="text-3xl font-extrabold font-display tracking-tight text-slate-900 leading-tight">
-            Crafted for Dental Students (BDS), Medical Students, Educators, and Doctors.
+            Crafted for specially dental student
           </h3>
-          <p className="text-sm text-slate-500 font-light">
-            We skip boring slideshows in favor of clear visual learning, step-by-step guides, and a helpful interactive AI study assistant.
-          </p>
         </div>
 
+        {false && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           {/* Feature 1 */}
           <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6 hover:shadow-2xl hover:translate-y-[-4px] transition-all group">
@@ -324,6 +300,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
             </div>
           </div>
         </div>
+        )}
       </section>
 
       {/* LEGENDARY TEACHER / FACULTY SECTION */}
@@ -383,19 +360,27 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-600 font-light">
                   <li className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
-                    <span>BD Chaurasia's Human Anatomy (Lead Editor)</span>
+                    <span>BD Chaurasiya for dental students volume 1-4</span>
                   </li>
                   <li className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
-                    <span>Companion Pocketbook of Anatomy</span>
+                    <span>Handbook of general anatomy</span>
                   </li>
                   <li className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
-                    <span>Surgical Study Guide Manual</span>
+                    <span>Textbook of histology</span>
                   </li>
                   <li className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
-                    <span>Clinical Embryology & Histology Atlas</span>
+                    <span>Manual of human dissection</span>
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+                    <span>Workbook of anatomy</span>
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-teal-500 shrink-0" />
+                    <span>Workbook of anatomy for dental students</span>
                   </li>
                 </ul>
               </div>
