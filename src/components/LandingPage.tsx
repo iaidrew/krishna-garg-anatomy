@@ -6,11 +6,10 @@ import { DNAModel, HeartModel, BrainModel, MedicalGeometry } from "./AnatomyMode
 
 interface LandingPageProps {
   onNavigate: (tab: "home" | "about" | "contact" | "courses" | "upload" | "admin" | "auth", extraId?: string) => void;
-  onOpenAI: () => void;
   onUnlockWithPasscode: (passcode: string) => { success: boolean; message: string; title?: string };
 }
 
-export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode }: LandingPageProps) {
+export default function LandingPage({ onNavigate, onUnlockWithPasscode }: LandingPageProps) {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [faqCategory, setFaqCategory] = useState<string>("All");
   const [passcode, setPasscode] = useState("");
@@ -35,7 +34,7 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
     ? faqData
     : faqData.filter(f => f.category === faqCategory);
 
-  const faqCategories = ["All", "Teaching Method", "How It Works", "AI Assistant", "Certificates"];
+  const faqCategories = ["All", "Teaching Method", "How It Works", "Certificates"];
 
   return (
     <div className="relative w-full max-w-full overflow-x-clip pt-3 pb-10 sm:pt-6 sm:pb-20 space-y-10 sm:space-y-16 md:space-y-24">
@@ -97,12 +96,6 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
                 <ArrowRight className="w-4.5 h-4.5 group-hover:translate-x-1 transition-transform" />
               </button>
 
-              <button
-                onClick={onOpenAI}
-                className="w-full sm:w-auto px-5 sm:px-6 py-3 rounded-full bg-white border border-purple-100 text-purple-950 font-medium text-xs tracking-tight hover:bg-purple-50/50 hover:border-purple-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
-              >
-                Ask Dr. Garg's AI Assistant
-              </button>
             </motion.div>
 
             {/* Direct Access Passcode Card */}
@@ -312,13 +305,12 @@ export default function LandingPage({ onNavigate, onOpenAI, onUnlockWithPasscode
             {/* Faculty Image */}
             <div className="lg:col-span-5 relative flex justify-center">
               <div className="relative">
-                <div className="absolute -inset-2 bg-gradient-to-tr from-purple-600 to-orange-500 rounded-2xl blur opacity-30 animate-pulse" />
-                <div className="relative rounded-2xl w-52 h-52 sm:w-60 sm:h-60 md:w-64 md:h-64 bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex items-center justify-center p-4 sm:p-6 text-center">
+                <div className="relative rounded-2xl w-56 h-72 sm:w-64 sm:h-80 md:w-72 md:h-[22rem] bg-slate-100 border border-slate-200 shadow-lg overflow-hidden flex items-center justify-center text-center">
                   {!teacherImageError ? (
                     <img
                       src={mainTeacher.avatar || ""}
                       alt={mainTeacher.name}
-                      className="w-full h-full object-contain bg-slate-950"
+                      className="w-full h-full object-cover"
                       style={{ objectPosition: "center top" }}
                       onError={() => setTeacherImageError(true)}
                     />

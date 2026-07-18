@@ -7,7 +7,6 @@ import { getFileFromFirestoreClient } from "../dbService";
 
 interface LecturePlayerProps {
   courses: Course[];
-  onOpenAI: () => void;
   selectedCourseId: string | null;
   setSelectedCourseId: (id: string | null) => void;
   activeLectureIdx: number;
@@ -16,7 +15,6 @@ interface LecturePlayerProps {
 
 export default function LecturePlayer({
   courses,
-  onOpenAI,
   selectedCourseId,
   setSelectedCourseId,
   activeLectureIdx,

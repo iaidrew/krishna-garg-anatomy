@@ -1,5 +1,5 @@
 import { Course, FAQItem, Testimonial, TimelineEvent, QuizQuestion } from "./types";
-const krishnaGargAvatar = "/assets/Krishna-Garg_(1).jpg";
+import krishnaGargAvatar from "../assets/Krishna-Garg_(1).jpg";
 const krishnaGargIllustration = "/assets/dr_krishna_garg.svg";
 
 // Faculty profiles focused on BDS & Dental Anatomy
@@ -327,11 +327,6 @@ export const faqData: FAQItem[] = [
     answer: "Every single cranial nerve module explains the exact tactile and bony landmarks (e.g., mandibular notch, pterygomandibular raphe, internal oblique ridge) required to administer precise Inferior Alveolar, Posterior Superior Alveolar, or Mental nerve blocks, preventing common complications like parotid capsule penetration."
   },
   {
-    category: "AI Assistant",
-    question: "What queries can the Garg Dental-Anatomy AI Assistant resolve?",
-    answer: "The Garg AI Assistant is backed by a server-side Gemini 3.5 Flash engine configured with Dr. Krishna Garg's academic textbooks. It is highly capable of explaining complex skull base foramina, masticatory muscles, TMJ movements, dental anomalies, and histology of oral tissues."
-  },
-  {
     category: "Practical Exams",
     question: "Can I use this platform to prepare for my BDS spotters and viva voce?",
     answer: "Yes! The platform includes interactive high-fidelity wireframe models, study highlight galleries, and board-level quiz questions. The virtual 'study review' mimics real-world exam questions on landmarks, nerve paths, and salivary ducts, giving you the ultimate confidence for vivas."
@@ -360,7 +355,7 @@ export const testimonials: Testimonial[] = [
     name: "Sneha Reddy",
     role: "BDS First Year Class Representative",
     university: "King George's Medical University (KGMU)",
-    text: "The combination of high-density lectures and the Garg AI assistant is like having Dr. Krishna Garg right next to you while preparing for practical viva exams. It's the ultimate anatomy library for dental students.",
+    text: "The combination of high-density lectures and carefully organized study materials makes preparation for practical viva exams much clearer. It's the ultimate anatomy library for dental students.",
     avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=256&h=256",
     rating: 5
   }

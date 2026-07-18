@@ -5,7 +5,6 @@ import Navigation from "./components/Navigation";
 import LandingPage from "./components/LandingPage";
 import LecturePlayer from "./components/LecturePlayer";
 import UploadExperience from "./components/UploadExperience";
-import AIAssistant from "./components/AIAssistant";
 import AdminPanel from "./components/AdminPanel";
 import AuthPage from "./components/AuthPage";
 import AboutPage from "./components/AboutPage";
@@ -19,12 +18,9 @@ import { signOut } from "firebase/auth";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"home" | "about" | "contact" | "courses" | "upload" | "admin" | "auth">("home");
-  const [isAIOpen, setIsAIOpen] = useState<boolean>(false);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [activeLectureIdx, setActiveLectureIdx] = useState<number>(0);
 
-  // Micro-interaction: Active highlighted medical term
-  const [highlightedTerm, setHighlightedTerm] = useState<string | null>(null);
 
   // User Profile State
   const [user, setUser] = useState<{ uid: string; email: string | null; name: string; role: "student" | "admin" } | null>(null);
@@ -216,13 +212,6 @@ export default function App() {
     setPasswordError("");
     setActiveTab("home");
     window.history.replaceState({}, document.title, window.location.pathname);
-  };
-
-  const handleHighlightTerm = (term: string) => {
-    setHighlightedTerm(term);
-    setTimeout(() => {
-      setHighlightedTerm((curr) => (curr === term ? null : curr));
-    }, 4500);
   };
 
   // Safe handler to select course, select specific lecture if given, and jump tab
@@ -422,7 +411,6 @@ export default function App() {
               setSelectedCourseId(null);
             }
           }}
-          onOpenAI={() => setIsAIOpen(true)}
           user={user}
           onLogout={handleLogout}
         />
@@ -449,7 +437,6 @@ export default function App() {
               {activeTab === "home" && (
                 <LandingPage
                   onNavigate={handleNavigate}
-                  onOpenAI={() => setIsAIOpen(true)}
                   onUnlockWithPasscode={handleUnlockWithPasscode}
                 />
               )}
@@ -465,7 +452,6 @@ export default function App() {
               {activeTab === "courses" && (
                 <LecturePlayer
                   courses={courses}
-                  onOpenAI={() => setIsAIOpen(true)}
                   selectedCourseId={selectedCourseId}
                   setSelectedCourseId={setSelectedCourseId}
                   activeLectureIdx={activeLectureIdx}
@@ -602,49 +588,6 @@ export default function App() {
                 </div>
               </form>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* FULLY FUNCTIONAL SIDEBAR AI ASSISTANT */}
-      <AIAssistant
-        isOpen={isAIOpen}
-        onClose={() => setIsAIOpen(false)}
-        onHighlightTerm={handleHighlightTerm}
-      />
-
-      {/* IMMERSIVE TERM HIGHLIGHT HUD ALERT (MICRO-INTERACTIONS) */}
-      <AnimatePresence>
-        {highlightedTerm && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 30 }}
-            className="fixed bottom-6 left-6 z-50 max-w-sm glass-panel p-4 rounded-2xl border border-teal-200 shadow-xl bg-teal-50/90 flex items-start gap-3.5 backdrop-blur-md"
-          >
-            <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 shrink-0">
-              <Activity className="w-4 h-4 animate-pulse" />
-            </div>
-
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] font-mono font-bold text-teal-700 tracking-wider uppercase">
-                  ANATOMICAL TERM FOUND
-                </span>
-                <button
-                  onClick={() => setHighlightedTerm(null)}
-                  className="text-slate-400 hover:text-slate-600 cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-              <h4 className="text-xs font-bold text-slate-900 uppercase font-mono tracking-tight">
-                HIGHLIGHT: {highlightedTerm}
-              </h4>
-              <p className="text-[10px] text-teal-900 font-light leading-relaxed">
-                We found the term <strong>{highlightedTerm}</strong>! Use the AI chat assistant or view the lecture list to explore related diagrams and explanations.
-              </p>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -3,7 +3,6 @@ import path from "path";
 import dotenv from "dotenv";
 import fs from "fs";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "firebase/firestore";
 
@@ -123,28 +122,6 @@ async function restoreFileFromFirestore(filename: string, filePath: string): Pro
   }
 }
 
-let aiClient: GoogleGenAI | null = null;
-
-function getGeminiClient(): GoogleGenAI {
-  if (!aiClient) {
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) {
-      throw new Error(
-        "GEMINI_API_KEY environment variable is required. Please set it via the Secrets panel in AI Studio Settings."
-      );
-    }
-    aiClient = new GoogleGenAI({
-      apiKey: key,
-      httpOptions: {
-        headers: {
-          "User-Agent": "aistudio-build",
-        },
-      },
-    });
-  }
-  return aiClient;
-}
-
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -163,95 +140,6 @@ async function startServer() {
 
   app.use(express.json({ limit: "100mb" }));
   app.use(express.urlencoded({ limit: "100mb", extended: true }));
-
-  // API: AI Assistant Chat proxying to server-side Gemini 3.5 Flash API
-  app.post("/api/chat", async (req: express.Request, res: express.Response): Promise<void> => {
-    try {
-      const { messages } = req.body;
-      if (!messages || !Array.isArray(messages)) {
-        res.status(400).json({ error: "Invalid messages format. Must be an array." });
-        return;
-      }
-
-      // Initialize Gemini safely and lazy-loaded
-      let ai;
-      try {
-        ai = getGeminiClient();
-      } catch (err: any) {
-        // If API key is missing, respond gracefully with instructions rather than crashing
-        res.status(403).json({
-          error: "API_KEY_MISSING",
-          message: err.message || "Gemini API key is not configured.",
-        });
-        return;
-      }
-
-      // Convert messages to GoogleGenAI chat schema
-      // Model expects history to be properly aligned
-      const contents = messages.map((msg) => ({
-        role: msg.role === "user" ? "user" : "model",
-        parts: [{ text: msg.text }],
-      }));
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: contents,
-        config: {
-          systemInstruction: `You are Dr. Krishna Garg, the world's most prestigious Senior Professor of Anatomy, Author of 'Textbook of Anatomy for Dental Students', and Chief Editor of B.D. Chaurasia's Human Anatomy.
-Your teaching tone is academic, warm, encouraging, and deeply inspiring, specifically tailored for BDS (Bachelor of Dental Surgery) students.
-Answer the dental student's question about head and neck anatomy, cranial nerves (especially Trigeminal CN V and Facial CN VII), TMJ mechanics, oral cavity, salivary glands, and dental local anaesthesia landmarks with extreme clinical and academic authority.
-
-Guidelines for your response:
-1. Speak with elegant, encouraging, and clear academic composure.
-2. Highlight complex clinical head and neck terminology in bold (e.g. **Temporomandibular Joint**, **Inferior Alveolar Nerve**, **Pterygomandibular space**, **Stensen's duct**, **Maxilla**, **Mandible**).
-3. Structure your response with distinct, beautiful sections (e.g., "Anatomical Blueprint", "BDS Clinical Relevance", "Dr. Garg's Oral Surgical Tip").
-4. Keep answers extremely focused, high-density, and highly readable (under 200-250 words) with bullet points rather than dense paragraphs.`,
-          temperature: 0.7,
-        },
-      });
-
-      const replyText = response.text || "My neural synapses could not map that request. Let us consult the anatomy atlas again.";
-
-      // Scan response text for anatomical words to enable highlights on client
-      const keySystems = [
-        "brain",
-        "mandible",
-        "maxilla",
-        "trigeminal",
-        "facial",
-        "tongue",
-        "salivary",
-        "parotid",
-        "denture",
-        "molar",
-        "pterygoid",
-        "masseter",
-        "temple",
-        "joint",
-        "skull",
-        "bone",
-        "nerve",
-        "muscle",
-        "artery",
-        "vein",
-        "synaptic",
-        "atrium",
-        "ventricle",
-      ];
-      const foundHighlights = keySystems.filter((sys) => replyText.toLowerCase().includes(sys));
-
-      res.json({
-        text: replyText,
-        anatomyHighlights: foundHighlights,
-      });
-    } catch (error: any) {
-      console.error("Gemini Assistant Route Error:", error);
-      res.status(500).json({
-        error: "INTERNAL_SERVER_ERROR",
-        message: error.message || "An unexpected error occurred in Garg AI Synapse server.",
-      });
-    }
-  });
 
   // Real Upload endpoint saving files to disk on the persistent server
   app.post("/api/upload", async (req, res) => {
@@ -508,8 +396,8 @@ All rights reserved (C) Dr. Krishna Garg Anatomy platform.
     app.use(vite.middlewares);
   }
 
-  // Vite must handle asset imports in development (for example, image.svg?import)
-  // before Express serves the raw files.
+  // In development Vite transforms imported image modules before this raw-file
+  // fallback. In production this serves any direct /assets requests.
   app.use("/assets", express.static(path.join(process.cwd(), "assets")));
 
   if (process.env.NODE_ENV === "production") {

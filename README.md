@@ -2,19 +2,15 @@
 <img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
 </div>
 
-# Run and deploy your AI Studio app
+# Krishna Garg Anatomy Portal
 
-This contains everything you need to run your app locally.
+## Run locally
 
-View your app in AI Studio: https://ai.studio/apps/e128fd92-c1df-4679-b7b7-3e0fa006194d
+**Prerequisite:** Node.js
 
-## Run Locally
+1. Open PowerShell in this folder.
+2. Run `npm install` (only the first time).
+3. Run `npm.cmd run dev`.
+4. Open http://localhost:3000.
 
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Keep the PowerShell window open while using the portal. The local development server now uses Vite directly, so the page and Dr. Krishna Garg's bundled photo load without requiring the custom backend server.

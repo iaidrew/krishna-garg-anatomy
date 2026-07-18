@@ -7,11 +7,10 @@ import { Course } from "../types";
 interface DashboardProps {
   courses: Course[];
   onSelectCourse: (courseId: string) => void;
-  onOpenAI: () => void;
   streak: number;
 }
 
-export default function Dashboard({ courses, onSelectCourse, onOpenAI, streak }: DashboardProps) {
+export default function Dashboard({ courses, onSelectCourse, streak }: DashboardProps) {
   const [selectedDay, setSelectedDay] = useState<number>(1);
   const totalDaysInMonth = 30;
 

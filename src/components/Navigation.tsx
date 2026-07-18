@@ -1,11 +1,10 @@
 import React from "react";
 import { motion } from "motion/react";
-import { Activity, Film, UploadCloud, Sparkles, Trophy, ShieldCheck, LogIn, LogOut, User, BookOpen, Mail } from "lucide-react";
+import { Activity, Film, UploadCloud, Trophy, ShieldCheck, LogIn, LogOut, User, BookOpen, Mail } from "lucide-react";
 
 interface NavigationProps {
   activeTab: "home" | "about" | "contact" | "courses" | "upload" | "admin" | "auth";
   setActiveTab: (tab: "home" | "about" | "contact" | "courses" | "upload" | "admin" | "auth") => void;
-  onOpenAI: () => void;
   user: { uid: string; email: string | null; name: string; role: "student" | "admin" } | null;
   onLogout: () => void;
 }
@@ -13,7 +12,6 @@ interface NavigationProps {
 export default function Navigation({ 
   activeTab, 
   setActiveTab, 
-  onOpenAI, 
   user,
   onLogout
 }: NavigationProps) {
@@ -98,15 +96,6 @@ export default function Navigation({
 
         {/* Right side stats & widgets */}
         <div className="flex items-center justify-between md:justify-end gap-2 sm:gap-4 w-full md:w-auto">
-          {/* Dr. Garg AI Trigger Pill */}
-          <button
-            onClick={onOpenAI}
-            className="flex items-center gap-1.5 bg-gradient-to-tr from-purple-600 to-purple-800 text-white rounded-full px-2.5 sm:px-3.5 py-1.5 text-[9px] sm:text-[10px] font-medium tracking-tight shadow-md hover:shadow-purple-500/15 cursor-pointer hover:scale-[1.03] transition-all"
-          >
-            <Sparkles className="w-3 h-3 text-amber-300 animate-pulse" />
-            <span>AI Helper</span>
-          </button>
-
           {/* Profile indicator */}
           <div className="flex items-center gap-2">
             {user ? (
